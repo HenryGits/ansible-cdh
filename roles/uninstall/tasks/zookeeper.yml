@@ -1,0 +1,32 @@
+---
+  - name: 检查zookeeper文件是否存在
+    shell: ls {{cdh_all_app_path}}/zookeeper
+    ignore_errors: True
+    register: result
+
+  - name: 存在则删除zookeeper文件
+    file: path={{cdh_all_app_path}}/zookeeper state=absent
+    when: result|succeeded
+
+  - name: 存在则删除zookeeper日志文件
+    file: path={{zookeeper_datadir}} state=absent
+    when: result|succeeded
+
+  - name: 存在则杀掉zookeeper相关进程
+    shell: ps -ef | grep zookeeper | grep -v "grep" | awk '{print $2}'| xargs kill -9
+    when: result|succeeded
+    ignore_errors: True
+
+  - name: 移除用户zookeeper
+    user: name=zookeeper state=absent
+    ignore_errors: True
+
+  - name: 移除环境变量/etc/profile.d/zookeeper
+    file: path=/etc/profile.d/zookeeper state=absent
+
+  - name: chkconfig加入zookeeper服务
+    shell: chkconfig --del zookeeper
+    ignore_errors: True
+
+  - name: 移除定时任务
+    cron: name="start zk" minute={{cron_time}} hour=* day=* month=* weekday=* job="sh {{tmp_dir}}/zk_crontab.sh" user=root state=absent

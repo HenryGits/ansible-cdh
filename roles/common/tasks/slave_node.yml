@@ -1,0 +1,40 @@
+---
+#  - name: 拷贝os6 rpm依赖包到{{rpm_dependent_directory}}下
+#    copy: src=rpm-dependent6/ dest={{rpm_dependent_directory}}/
+#    when: ansible_os_family == 'RedHat' and ansible_distribution_major_version == '6'
+
+  - name: 拷贝os7 rpm依赖包到{{rpm_dependent_directory}}下
+    copy: src=rpm-dependent7/ dest={{rpm_dependent_directory}}/
+    when: ansible_os_family == 'RedHat' and ansible_distribution_major_version == '7'
+
+  - name: 安装升级依赖包
+    shell: yum -y install * chdir={{rpm_dependent_directory}}/
+    ignore_errors: True
+
+  - name: 检查文件是否存在
+    shell: ls /etc/chrony.conf.bak
+    ignore_errors: True
+    register: chrony_result
+
+  - name: 不存在则备份/etc/chrony.conf文件
+    shell: mv /etc/chrony.conf /etc/chrony.conf.bak
+    when: chrony_result|failed
+
+  - name: 配置chrony.conf
+    template: src=slave_chrony.conf.j2 dest=/etc/chrony.conf
+    notify:
+      - 启动chrony服务并设置开机自启动
+
+  - name: 检查文件是否存在
+    shell: ls /etc/ssh/ssh_config.bak
+    ignore_errors: True
+    register: ssh_result
+
+  - name: 不存在则备份/etc/ssh/ssh_config文件
+    shell: mv /etc/ssh/ssh_config /etc/ssh/ssh_config.bak
+    when: ssh_result|failed
+
+  - name: 设置ssh_config.j2
+    template: src=ssh_config.j2 dest=/etc/ssh/ssh_config
+    notify:
+      - 重启sshd服务

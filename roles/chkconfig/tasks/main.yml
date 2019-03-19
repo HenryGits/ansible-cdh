@@ -1,0 +1,120 @@
+---
+  - name: 检查hadoop机器数量
+    when: groups['hadoop']|count < 3 and groups['hadoop']|count % 2 == 0
+    fail: msg="hadoop安装机器数为奇数台，且不少于三台。当前配置为 {{ groups['hadoop']|count }}台"
+    run_once: true
+
+  - name: 检查NameNode节点数量
+    when: groups['NameNodes']|count < 1 or groups['NameNodes']|count > 2
+    fail: msg="NameNode节点数量大于1台，不能超过2台。当前配置为 {{ groups['NameNodes']|count }}台"
+    run_once: true
+
+  - name: 检查DataNode节点数量
+    when: groups['DataNodes']|count < 2
+    fail: msg="DataNode节点数量不少于2台。当前配置为 {{ groups['DataNodes']|count }}台!!"
+    run_once: true
+
+  - name: 检查cloudera-manager机器数
+    when: groups['cdh5-all']|count < 3 and groups['cdh5-all']|count % 2 == 0
+    fail: msg="cloudera安装机器数为奇数台，且不少于三台。当前配置为 {{ groups['cdh5-all']|count }}台!!"
+    run_once: true
+
+  - name: 检查zookeeper机器数
+    when: groups['cdh5-zookeeper']|count < 3 and groups['cdh5-zookeeper']|count % 2 == 0
+    fail: msg="zookeeper安装机器数为奇数台，且不少于三台。当前配置为 {{ groups['cdh5-zookeeper']|count }}台!!"
+    run_once: true
+
+  - name: 检查zookeeper机器数是否和hadoop机器数相同
+    when: groups['cdh5-zookeeper']|count < groups['hadoop']|count
+    fail: msg="建议zookeeper安装机器数应和hadoop机器数相等。当前配置为 {{ groups['cdh5-zookeeper']|count }}台!!"
+    run_once: true
+
+  - name: tmp非空检查
+    when: groups['tmp']|count < 1
+    fail: msg="[tmp]下未配置!!"
+    run_once: true
+
+  - name: common非空检查
+    when: groups['common']|count < 1
+    fail: msg="[common]下未配置!!"
+    run_once: true
+
+  - name: mysql-master非空检查
+    when: groups['mysql-master']|count < 1
+    fail: msg="[mysql-master]下未配置!!"
+    run_once: true
+
+  - name: mysql-slave非空检查
+    when: groups['mysql-slave']|count < 1
+    fail: msg="[mysql-slave]下未配置!!"
+    run_once: true
+
+  - name: dm-master非空检查
+    when: groups['dm-master']|count < 1
+    fail: msg="[dm-master]下未配置!!"
+    run_once: true
+
+#  - name: udm-master非空检查
+#    when: groups['udm-master']|count < 1
+#    fail: msg="[udm-master]下未配置!!"
+#    run_once: true
+
+  - name: presto-all非空检查
+    when: groups['presto-all']|count < 1
+    fail: msg="[presto-all]下未配置!!"
+    run_once: true
+
+  - name: presto-master非空检查
+    when: groups['presto-master']|count < 1
+    fail: msg="[presto-master]下未配置!!"
+    run_once: true
+
+  - name: dmudb-master非空检查
+    when: groups['dmudb-master']|count < 1
+    fail: msg="[dmudb-master]下未配置!!"
+    run_once: true
+
+  - name: cdh5-server非空检查
+    when: groups['cdh5-server']|count < 1
+    fail: msg="[cdh5-server]下未配置!!"
+    run_once: true
+
+  - name: cdh5-hive非空检查
+    when: groups['cdh5-hive']|count < 1
+    fail: msg="[cdh5-hive]下未配置!!"
+    run_once: true
+
+  - name: cdh5-hue非空检查
+    when: groups['cdh5-hue']|count < 1
+    fail: msg="[cdh5-hue]下未配置!!"
+    run_once: true
+
+  - name: cdh5-kafka非空检查
+    when: groups['cdh5-kafka']|count < 1
+    fail: msg="[cdh5-kafka]下未配置!!"
+    run_once: true
+
+  - name: mongodb-all非空检查
+    when: groups['mongodb-all']|count < 1
+    fail: msg="[mongodb-all]下未配置!!"
+    run_once: true
+
+  - name: cdh5-oozie非空检查
+    when: groups['cdh5-oozie']|count < 1
+    fail: msg="[cdh5-oozie]下未配置!!"
+    run_once: true
+
+  - name: elasticsearch-all非空检查
+    when: groups['elasticsearch-all']|count < 1
+    fail: msg="[elasticsearch-all]下未配置!!"
+    run_once: true
+
+  - name: flume-all非空检查
+    when: groups['flume-all']|count < 1
+    fail: msg="[flume-all]下未配置!!"
+    run_once: true
+
+  - name: cdh5-sqoop非空检查
+    when: groups['cdh5-sqoop']|count < 1
+    fail: msg="[cdh5-sqoop]下未配置!!"
+    run_once: true

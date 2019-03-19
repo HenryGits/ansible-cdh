@@ -1,0 +1,63 @@
+---
+
+  - name: 新建用户hive并获取root权限
+    user: name=hive shell=/bin/bash groups=hadoop home=/usr/hive createhome=yes system=yes
+    ignore_errors: True
+
+  - name: 创建cdh5文件夹
+    file: path={{cdh_all_app_path}} state=directory
+
+  - name: 解压hive安装包
+    unarchive: src={{hive_package_name}} dest={{cdh_all_app_path}}/
+
+  - name: 更改hive文件名称
+    shell: mv -f {{cdh_all_app_path}}/hive* {{cdh_all_app_path}}/hive
+
+  - name: 修改文件的所有组、人、权限
+    file: path={{cdh_all_app_path}}/hive recurse=Yes  owner=hive group=hadoop mode=0755
+
+  - name: 设置hive配置文件
+    template: src={{item}}.j2 dest={{cdh_all_app_path}}/hive/conf/{{item}} owner=hive group=hadoop mode=0664
+    with_items:
+    - hive-site.xml
+    - hive-env.sh
+    - beeline-log4j.properties
+    - hive-exec-log4j.properties
+    - hive-log4j.properties
+
+  - name: 拷贝mysql-connector-java-5.1.44.jar到hive/lib下
+    copy: src={{mysql_jdbc_jar}} dest={{cdh_all_app_path}}/hive/lib/
+
+  - name: 处理模板文件hive_mysql.sh
+    template: src=hive_mysql.sh dest={{tmp_dir}}/hive_mysql.sh owner=root group=root mode=0755
+
+  - name: 创建hive相关库
+    shell: sh {{tmp_dir}}/hive_mysql.sh
+
+  - name: 初始化hive
+    shell: source /root/.bashrc;bin/schematool -initSchema -dbType mysql chdir={{cdh_all_app_path}}/hive/
+
+  - name: 初始化metastore
+    shell: nohup hive --service metastore & chdir={{cdh_all_app_path}}/hive/bin/
+
+  - name: 初始化hiveserver2
+    shell: nohup hive --service hiveserver2 & chdir={{cdh_all_app_path}}/hive/bin/
+
+
+  - name: 处理启动脚本hive.sh
+    template: src=hive.sh.j2 dest=/etc/init.d/hive owner=root group=root mode=0777
+
+  - name: chkconfig加入hive服务
+    shell: chkconfig --add hive
+
+  - name: hive开机自启动
+    service: name=hive enabled=yes
+
+
+
+################################################# 定时拉起 #######################################################################
+  - name: 处理定时任务模板文件hive_crontab.sh.j2
+    template: src=hive_crontab.sh.j2 dest={{tmp_dir}}/hv_crontab.sh owner=root group=root mode=0777
+
+  - name: 加入定时任务
+    cron: name="start hive" minute={{cron_time}} hour=* day=* month=* weekday=* job="sh {{tmp_dir}}/hv_crontab.sh" user=root state=present

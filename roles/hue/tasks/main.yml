@@ -1,0 +1,67 @@
+---
+
+  - name: 新建用户hue并获取root权限
+    user: name=hue shell=/bin/bash groups=hadoop home=/usr/hue createhome=yes system=yes
+    ignore_errors: True
+
+  - name: 创建cdh5文件夹
+    file: path={{cdh_all_app_path}} state=directory
+
+  - name: 解压hue安装包
+    unarchive: src={{hue_package_name}} dest={{cdh_all_app_path}}/
+
+  - name: 更改hue文件名称
+    shell: mv -f {{cdh_all_app_path}}/hue* {{cdh_all_app_path}}/hue
+
+#  - name: 修改文件的所有组、人、权限
+#    file: path={{cdh_all_app_path}}/hue  recurse=Yes owner=hue group=hadoop mode=0755
+
+  - name: 设置hue界面为中文
+    template: src=settings.py dest={{cdh_all_app_path}}/hue/desktop/core/src/desktop/settings.py owner=hue group=hadoop mode=0664
+
+  - name: 编译hue
+    shell: make apps chdir={{cdh_all_app_path}}/hue/
+
+  - name: 修改文件的所有组、人、权限
+    file: path={{cdh_all_app_path}}/hue  recurse=Yes owner=hue group=hadoop mode=0755
+
+  - name: 设置hue配置文件
+    template: src=hue.ini dest={{cdh_all_app_path}}/hue/desktop/conf/hue.ini owner=hue group=hadoop mode=0664
+
+  - name: 处理模板文件hue_mysql.sh
+    template: src=hue_mysql.sh dest={{tmp_dir}}/hue_mysql.sh owner=root group=root mode=0755
+
+  - name: 创建hue相关用户、库
+    shell: sh {{tmp_dir}}/hue_mysql.sh
+
+  - name: 初始化hue数据
+    shell: bin/hue syncdb --noinput chdir={{cdh_all_app_path}}/hue/build/env/
+
+  - name: 初始化hue参数
+    shell: bin/hue migrate chdir={{cdh_all_app_path}}/hue/build/env/
+
+  - name: 启动hue
+    shell: bin/supervisor start& chdir={{cdh_all_app_path}}/hue/build/env/
+
+  - name: 等待1分钟
+    pause: minutes=1
+
+
+
+  - name: 设置hue启动脚本文件
+    template: src=hue.sh.j2 dest=/etc/init.d/hue owner=root group=root mode=0777
+
+  - name: chkconfig加入hue服务
+    shell: chkconfig --add hue
+
+  - name: hue开机自启动
+    service: name=hue state=restarted enabled=yes
+
+
+
+################################################# 定时拉起 #######################################################################
+  - name: 处理定时任务模板文件hue_crontab.sh.j2
+    template: src=hue_crontab.sh.j2 dest={{tmp_dir}}/hu_crontab.sh owner=root group=root mode=0777
+
+  - name: 加入定时任务
+    cron: name="start hue" minute={{cron_time}} hour=* day=* month=* weekday=* job="sh {{tmp_dir}}/hu_crontab.sh" user=root state=present

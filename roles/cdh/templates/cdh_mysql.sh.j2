@@ -1,0 +1,18 @@
+#!/bin/bash  
+mysql -uroot -p'{{mysql_password}}'<<EOF
+#创建其他组件库
+drop database if exists scm;
+#Hive数据库
+drop database if exists hive;
+create database hive DEFAULT CHARSET utf8 COLLATE utf8_general_ci;
+#集群监控数据库
+drop database if exists amon;
+create database amon DEFAULT CHARSET utf8 COLLATE utf8_general_ci;
+#HUE数据库
+drop database if exists hue;
+create database hue DEFAULT CHARSET utf8 COLLATE utf8_general_ci;
+#Oozie数据库
+drop database if exists oozie;
+create database oozie DEFAULT CHARSET utf8 COLLATE utf8_general_ci;
+EOF
+exit;

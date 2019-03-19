@@ -1,0 +1,17 @@
+---
+  - name: 卸载自带的openjdk
+    shell: rpm -e --nodeps `rpm -qa|grep jdk`
+    ignore_errors: True
+
+  - name: 检查jdk文件是否存在
+    shell: ls {{java_deposit_path}}/
+    ignore_errors: True
+    register: result
+
+  - name: 存在则删除jdk文件
+    file: path={{java_deposit_path}}/jdk* state=absent
+    when: result|succeeded
+
+  - name: 存在则删除jdk环境变量文件
+    file: path=/etc/profile.d/java state=absent
+    when: result|succeeded

@@ -1,0 +1,206 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+
+<configuration>
+    <property>
+        <name>yarn.nodemanager.resource.memory-mb</name>
+        <value>{{ansible_memtotal_mb//4}}</value>
+        <description>单位为MB</description>
+    </property>
+
+    <property>
+        <name>yarn.nodemanager.vmem-pmem-ratio</name>
+        <value>90</value>
+        <description>百分比</description>
+    </property>
+
+    <property>
+        <name>yarn.nodemanager.resource.cpu-vcores</name>
+        <value>{{ansible_processor_vcpus}}</value>
+        <description>表示该节点上YARN可使用的虚拟CPU个数，默认是8</description>
+    </property>
+
+    <property>
+        <name>yarn.nodemanager.local-dirs</name>
+        <value>{{yarn_nodemanager_local_dirs}}</value>
+        <description>列表用逗号分隔</description>
+    </property>
+
+    <property>
+        <name>yarn.nodemanager.log-dirs</name>
+        <value>{{yarn_nodemanager_log_dirs}}</value>
+        <description>列表用逗号分隔</description>
+    </property>
+
+    <property>
+        <name>yarn.nodemanager.log.retain-seconds</name>
+        <value>10800</value>
+        <description>单位为S</description>
+    </property>
+
+    <property>
+        <name>yarn.nodemanager.aux-services</name>
+        <value>mapreduce_shuffle</value>
+        <description>Shuffle_service 需要加以设置的MapReduce的应用程序服务</description>
+    </property>
+
+    <property>
+        <name>yarn.nodemanager.aux-services.mapreduce.shuffle.class</name>
+        <value>org.apache.hadoop.mapred.ShuffleHandler</value>
+    </property>
+
+    <property>
+        <name>yarn.nodemanager.localizer.address</name>
+        <value>0.0.0.0:8040</value>
+        <description>Address where the localizer IPC is.</description>
+    </property>
+
+    <property>
+        <name>yarn.nodemanager.webapp.address</name>
+        <value>0.0.0.0:8042</value>
+        <description>NodeManager Webapp address</description>
+    </property>
+
+    <property>
+        <name>yarn.nodemanager.aux-services</name>
+        <value>mapreduce_shuffle</value>
+    </property>
+
+    <property>
+        <name>yarn.nodemanager.aux-services.mapreduce_shuffle.class</name>
+        <value>org.apache.hadoop.mapred.ShuffleHandler</value>
+        <description>执行MapReduce需要配置的shuffle过程</description>
+    </property>
+
+    <property>
+        <name>yarn.log-aggregation-enable</name>
+        <value>true</value>
+    </property>
+
+    <property>
+        <name>yarn.dispatcher.exit-on-error</name>
+        <value>true</value>
+    </property>
+
+    <property>
+        <name>yarn.resourcemanager.scheduler.class</name>
+        <value>org.apache.hadoop.yarn.server.resourcemanager.scheduler.fair.FairScheduler</value>
+    </property>
+
+    <property>
+        <name>yarn.resourcemanager.recovery.enabled</name>
+        <value>true</value>
+        <description>启用resourcemanager 自动恢复</description>
+    </property>
+
+    <property>
+        <name>yarn.resourcemanager.connect.retry-interval.ms</name>
+        <value>2000</value>
+        <description>超时的周期</description>
+    </property>
+
+
+    <!-- 如果NameNodes配置超过两个，则开启高可用 -->
+    {% for host in groups['NameNodes'] %}
+    {% if loop.last  %}
+    {% if loop.length >1 %}
+    <property>
+        <name>yarn.resourcemanager.ha.enabled</name>
+        <value>true</value>
+        <description>打开高可用</description>
+    </property>
+
+    <property>
+        <name>yarn.resourcemanager.ha.automatic-failover.enabled</name>
+        <value>true</value>
+        <description>启动故障自动恢复</description>
+    </property>
+
+    <property>
+        <name>yarn.resourcemanager.ha.automatic-failover.embedded</name>
+        <value>true</value>
+    </property>
+
+    <!--<property>-->
+        <!--<name>yarn.resourcemanager.ha.id</name>-->
+        <!--<value>{% for host in groups['NameNodes'] %}{% if loop.last  %}rm{{ loop.index }}{% else %}rm{{ loop.index }},{% endif %}{% endfor %}</value>-->
+    <!--</property>-->
+
+    <property>
+        <name>yarn.resourcemanager.ha.rm-ids</name>
+        <value>{% for host in groups['NameNodes'] %}{% if loop.last  %}rm{{ loop.index }}{% else %}rm{{ loop.index }},{% endif %}{% endfor %}</value>
+        <description>给ResourceManager 取个名字</description>
+    </property>
+
+    <property>
+        <name>yarn.resourcemanager.cluster-id</name>
+        <value>yarn-rm-cluster</value>
+        <description>给yarn cluster 取个名字yarn-rm-cluster</description>
+    </property>
+
+    {% for host in groups['NameNodes'] %}
+    <property>
+        <name>yarn.resourcemanager.hostname.rm{{ loop.index }}</name>
+        <value>{{host}}</value>
+        <description>配置ResourceManager hostname</description>
+    </property>
+    {% endfor %}
+    {% else %}
+    {% endif %}
+    {% else %}
+    {% endif %}
+    {% endfor %}
+
+
+    <property>
+        <name>yarn.resourcemanager.zk.state-store.address</name>
+        <value>{% for host in groups['cdh5-zookeeper'] %}{% if loop.last  %}{{host}}:2181{% else %}{{host}}:2181,{% endif %}{% endfor %}</value>
+        <description>配置Zookeeper地址</description>
+    </property>
+
+    <property>
+        <name>yarn.resourcemanager.zk-address</name>
+        <value>{% for host in groups['cdh5-zookeeper'] %}{% if loop.last  %}{{host}}:2181{% else %}{{host}}:2181,{% endif %}{% endfor %}</value>
+    </property>
+
+    <property>
+        <name>yarn.resourcemanager.store.class</name>
+        <value>org.apache.hadoop.yarn.server.resourcemanager.recovery.ZKRMStateStore</value>
+        <description>指定resourcemanager的状态信息存储在zookeeper集群，默认是存放在FileSystem里面</description>
+    </property>
+
+    {% for host in groups['NameNodes'] %}
+    <property>
+        <name>yarn.resourcemanager.address</name>
+        <value>{{host}}:8032</value>
+        <description>RM对客户端暴露的地址，客户端通过该地址向RM提交应用程序等</description>
+    </property>
+    <property>
+        <name>yarn.resourcemanager.scheduler.address</name>
+        <value>{{host}}:8034</value>
+        <description>RM对AM暴露的地址，AM通过地址想RM申请资源，释放资源等</description>
+    </property>
+    <property>
+        <name>yarn.resourcemanager.webapp.address</name>
+        <value>{{host}}:8088</value>
+        <description>resourcemanager webapp address</description>
+    </property>
+    {% endfor %}
+
+</configuration>

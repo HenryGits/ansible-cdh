@@ -1,0 +1,25 @@
+---
+  - name: 检查flume文件是否存在
+    shell: ls {{cdh_all_app_path}}/flume
+    ignore_errors: True
+    register: result
+
+  - name: 存在则删除flume文件
+    file: path={{cdh_all_app_path}}/flume state=absent
+    when: result|succeeded
+
+  - name: 存在则停止flume服务
+    shell: ps -ef | grep flume | grep -v "grep" | awk '{print $2}'| xargs kill -9
+    ignore_errors: True
+    when: result|succeeded
+
+  - name: 移除用户
+    user: name=flume state=absent
+    ignore_errors: True
+
+  - name: chkconfig移除flume服务
+    shell: chkconfig --del flume
+    ignore_errors: True
+
+  - name: 移除定时任务
+    cron: name="start flume" minute={{cron_time}} hour=* day=* month=* weekday=* job="sh {{tmp_dir}}/flm_crontab.sh" user=root state=absent

@@ -1,0 +1,181 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<application xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:noNamespaceSchemaLocation="dmdp-config.xsd">
+
+    <parameter>
+        <name>UI_STYLE</name>
+        <value>ligerui2</value>
+        <default>ligerui2</default>
+        <description>配置使用UI风格，可选值：default,ligerui</description>
+    </parameter>
+
+   	<parameter>
+		<name>SYSTEM_TITLE</name>
+		<value>达梦大数据分析处理平台</value>
+		<default>达梦大数据分析处理平台</default>
+		<description>默认系统名称</description>
+	</parameter>
+    
+    <parameter>
+        <name>EXCLUDE_INITHANDLERS</name>
+        <value>core_mvc_ActionInitHandler,core_mvc_MenuInitHandler1_5,common_dict_CommonDictInitHandler</value>
+        <default></default>
+        <description>用来排除指定初始化类，可用半角逗号(,)分隔。请用DMDP平台指定的Bean名称代替类名。理论上，我们可以使用不同版本的初始化器，支持各种初始化配置文件格式，不同模块同时兼容1.1和1.5，另外我们也可以定义其他的初始化活动</description>
+    </parameter>
+    <parameter>
+        <name>MENU_LOAD_TYPE</name>
+        <value>out</value>
+        <default>out</default>
+        <description>菜单加载方式，in - 只加载内部类路径菜单；out - 只加载外部菜单；in_then_out - 先加载内部类路径菜单，然后再加载外部文件菜单。</description>
+    </parameter>
+    <parameter>
+        <name>CAS_ENABLE</name>
+        <value>false</value>
+        <default>false</default>
+        <description>是否启用单点登录。</description>
+    </parameter>
+
+	<parameter>
+		<name>START_URL</name>
+		<value>/system/rbac/RbacPortal/index.do</value>
+		<default>/common/simple/SimplePortal/start.do</default>
+		<description>系统开始页面链接。注意：统一以/开头。</description>
+	</parameter>
+	<parameter>
+		<name>INDEX_REQUEST</name>
+		<value>/system/rbac/RbacPortal/manage.do</value>
+		<default>/common/simple/SimplePortal/manage.do,/common/simple/SimplePortal/index.do</default>
+		<description>登录成功后的首页链接地址。注意：统一以/开头。</description>
+	</parameter>
+	<parameter>
+		<name>WELCOME_URL</name>
+		<value>/system/rbac/RbacPortal/welcome.do</value>
+		<default>/common/simple/SimplePortal/welcome.do</default>
+		<description>后台欢迎页面的链接地址。注意：统一以/开头。</description>
+	</parameter>
+	<parameter>
+		<name>LOGIN_URL</name>
+		<value>/system/rbac/RbacLogin/login.do</value>
+		<default>/common/simple/SimpleLogin/login.do</default>
+		<description>登录页面链接地址。注意：统一以/开头。</description>
+	</parameter>
+	<parameter>
+		<name>LOGIN_VERIFY_URL</name>
+		<value>/system/rbac/RbacLogin/verify.do</value>
+		<default>/common/simple/SimpleLogin/verify.do</default>
+		<description>登录验证链接地址。注意：统一以/开头。</description>
+	</parameter>
+	<parameter>
+		<name>LOGOUT_URL</name>
+		<value>/system/rbac/RbacLogin/logout.do</value>
+		<default>/common/simple/SimpleLogin/logout.do</default>
+		<description>登录注销链接地址。注意：统一以/开头。</description>
+	</parameter>
+	`
+    <parameter>
+        <name>HDFS_COORDINATOR</name>
+        <value>hdfs://{{ groups['NameNodes'][0] }}:8020</value>
+        <default>hdfs://{{ groups['NameNodes'][0] }}:8020</default>
+        <description>hdfs主节点信息</description>
+    </parameter>
+    
+    <parameter>
+        <name>PRESTO_COORDINATOR</name>
+        <value>http://{{ groups['presto-master'][0] }}:9990</value>
+        <default>http://{{ groups['presto-master'][0] }}:9990</default>
+        <description>presto服务地址</description>
+    </parameter>
+
+    <parameter>
+        <name>PRESTO_DEFAULT_CATALOG</name>
+        <value>hive</value>
+        <default>hive</default>
+        <description>默认目录</description>
+    </parameter>
+    
+    <parameter>
+        <name>PRESTO_DEFAULT_SCHEMA</name>
+        <value>sample</value>
+        <default>sample</default>
+        <description>默认模式</description>
+    </parameter>
+    
+    <parameter>
+        <name>PRESTO_OUTPUT_CSV</name>
+        <value>/opt/dmudb/csv</value>
+        <default>C:/temp/dmudb/csv</default>
+        <description>CSV输出目录</description>
+    </parameter>
+    
+    <parameter>
+        <name>PRESTO_OUTPUT_LIMIT</name>
+        <value>1000000000</value>
+        <default>100000</default>
+        <description>数据记录数限制</description>
+    </parameter>
+
+    <parameter>
+        <name>HIVE_DRIVER</name>
+        <value>org.apache.hive.jdbc.HiveDriver</value>
+        <default>org.apache.hive.jdbc.HiveDriver</default>
+        <description>通过JDBC连接hive的驱动</description>
+    </parameter>
+
+    <parameter>
+        <name>HIVE_URL_PREFIX</name>
+        <value>jdbc:hive2://{{ groups['cdh5-hive'][0] }}:10000</value>
+        <default>jdbc:hive2://{{ groups['cdh5-hive'][0] }}:10000</default>
+        <description>通过JDBC连接HIVE的URL前段信息</description>
+    </parameter>
+
+    <parameter>
+        <name>HIVE_USERNAME</name>
+        <value>hive</value>
+        <default>hive</default>
+        <description>通过JDBC连接HIVE的用户名</description>
+    </parameter>
+
+    <parameter>
+        <name>HIVE_PASSWORD</name>
+        <value>hadoop</value>
+        <default>hadoop</default>
+        <description>通过JDBC连接HIVE的密码</description>
+    </parameter>
+
+	<parameter>
+		<name>AUTO_MENU_ACTION</name>
+		<value>true</value>
+		<default>false</default>
+		<description>是否使用初始化和智能匹配菜单和权限</description>
+	</parameter>
+
+	<parameter>
+		<name>EXCLUDE_SERVICES</name>
+		<value>BASIC_QUERY</value>
+		<default>BASIC_QUERY</default>
+		<description>过滤的服务</description>
+	</parameter>
+
+    <!-- 提供系统管理服务URL基路径 -->
+    <parameter>
+        <name>SYSTEM_PROVIDER_BASE_URL</name>
+        <value>http://{{ groups['dmudb-master'][0] }}:8080/dmdp-rcs</value>
+        <default>http://{{ groups['dmudb-master'][0] }}:8080/</default>
+        <description>提供系统管理服务URL基路径</description>
+    </parameter>
+
+    <!-- 提供元数据管理服务URL基路径 -->
+    <parameter>
+        <name>UDM_PROVIDER_BASE_URL</name>
+        <value>http://{{ groups['dmudb-master'][0] }}:8080/dmdp-rcs</value>
+        <default>http://{{ groups['dmudb-master'][0] }}:8080/</default>
+        <description>提供元数据管理服务URL基路径</description>
+    </parameter>
+
+    <parameter>
+        <name>COMMON_STORAGE_SERVICE_BASE_URL</name>
+        <value>http://{{ groups['dmudb-master'][0] }}:8060</value>
+        <default>http://{{ groups['dmudb-master'][0] }}:8060</default>
+        <description>访问存储服务微服务的url基路径</description>
+    </parameter>
+</application>

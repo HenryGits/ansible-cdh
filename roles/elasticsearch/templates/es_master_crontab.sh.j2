@@ -1,0 +1,30 @@
+#!/bin/bash
+
+svc_es="elasticsearch"
+svc_grunt="grunt"
+svc_kbn="kibana"
+
+#linux判断某服务是否启动
+if ps -ef | grep $svc_es | egrep -v grep >/dev/null
+then
+    echo "" >/dev/null
+else
+    #重启es服务
+    /usr/sbin/service elasticsearch restart
+fi
+
+if ps -ef | grep $svc_grunt | egrep -v grep >/dev/null
+then
+    echo "" >/dev/null
+else
+    #重启grunt服务
+    /usr/sbin/service grunt restart
+fi
+
+if ps -ef | grep $svc_kbn | egrep -v grep >/dev/null
+then
+    echo "" >/dev/null
+else
+    #重启kibana服务
+    /usr/sbin/service kibana restart
+fi

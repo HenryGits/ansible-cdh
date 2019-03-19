@@ -1,0 +1,13 @@
+---
+  - name: 启动chrony服务并设置开机自启动
+    service: name=chronyd state=restarted enabled=yes
+
+  - name: restart rsyslog
+    service: name=rsyslog state=restarted
+
+  - name: 重启sshd服务
+    service: name=sshd state=restarted
+
+  - name: sysctl on
+    shell: sysctl -p
+    ignore_errors: True

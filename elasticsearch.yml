@@ -1,0 +1,19 @@
+---
+
+  - name: 配置elasticsearch组件
+    hosts: elasticsearch-all
+    remote_user: root
+    roles:
+    - { role: elasticsearch, tags: "all_es_node", deploy: "all_node"}
+
+  - name: 启动elasticsearch集群
+    hosts: elasticsearch-all[0]
+    remote_user: root
+    roles:
+    - { role: elasticsearch, tags: "master_es_node", deploy: "master_node"}
+
+  - name: 启动elasticsearch集群
+    hosts: elasticsearch-all:!elasticsearch-all[0]
+    remote_user: root
+    roles:
+    - { role: elasticsearch, tags: "slave_es_node", deploy: "slave_node"}

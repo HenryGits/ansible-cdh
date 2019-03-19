@@ -1,0 +1,17 @@
+---
+
+  - name: namenode初始化脚本
+    template: src=hdfs dest={{cdh_all_app_path}}/hadoop/bin/hdfs owner=hadoop group=hadoop mode=0755
+
+  - name: hadoop启动脚本start-all.sh
+    template: src=start-all.sh dest={{cdh_all_app_path}}/hadoop/sbin/start-all.sh owner=hadoop group=hadoop mode=0755
+
+  - name: 格式化namenode
+    shell: nohup bin/hdfs namenode -format & chdir={{cdh_all_app_path}}/hadoop/
+
+  - name: 等待成功格式化namenode
+    wait_for: path={{dfs_namenode_name_dir}}
+
+  - name: 启动namenode
+    shell: sh hadoop-daemon.sh start namenode chdir={{cdh_all_app_path}}/hadoop/sbin/
+

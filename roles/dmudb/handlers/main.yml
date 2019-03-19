@@ -1,0 +1,6 @@
+---
+  - name: restart tomcat
+    shell: sh tomcat.sh restart chdir={{dmudb_tomcat_directory}}/tomcat/bin/
+
+  - name: restart presto
+    shell: "{{presto_directory}}/presto/bin/launcher.py restart"

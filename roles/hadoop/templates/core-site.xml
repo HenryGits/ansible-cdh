@@ -1,0 +1,108 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+
+<configuration>
+
+  {% for host in groups['NameNodes'] %}
+  {% if loop.last  %}
+  {% if loop.length >1 %}
+  <property>
+    <name>fs.defaultFS</name>
+    <value>hdfs://cluster</value>
+    <description>这里的值指的是默认的HDFS路径 ，取名为cluster </description>
+  </property>
+  {% else %}
+  <property>
+    <name>fs.defaultFS</name>
+    <value>hdfs://{{groups['NameNodes'][0]}}:8020</value>
+    <description>这里的值指的是默认的HDFS路径</description>
+  </property>
+  {% endif %}
+  {% else %}
+  {% endif %}
+  {% endfor %}
+
+  <property>
+    <name>io.file.buffer.size</name>
+    <value>131072</value>
+    <description>流文件的缓冲区大小。该属性值单位为KB，131072KB即为默认的64M</description>
+  </property>
+
+  <property>
+    <name>hadoop.tmp.dir</name>
+    <value>file:{{hadoop_data_dir}}/tmp</value>
+    <description>Abase for other temporary   directories.</description>
+  </property>
+
+  <!-- OOZIE proxy user setting -->
+  <property>
+    <name>hadoop.proxyuser.oozie.hosts</name>
+    <value>*</value>
+    <description>[hadoop.proxyuser.xx.hosts]xx是根据所在用户组来填</description>
+  </property>
+
+  <property>
+    <name>hadoop.proxyuser.oozie.groups</name>
+    <value>*</value>
+  </property>
+
+  <!-- HTTPFS proxy user setting -->
+  <property>
+    <name>hadoop.proxyuser.httpfs.hosts</name>
+    <value>*</value>
+  </property>
+
+  <property>
+    <name>hadoop.proxyuser.httpfs.groups</name>
+    <value>*</value>
+  </property>
+
+  <!-- Llama proxy user setting -->
+  <property>
+    <name>hadoop.proxyuser.llama.hosts</name>
+    <value>*</value>
+  </property>
+
+  <property>
+    <name>hadoop.proxyuser.llama.groups</name>
+    <value>*</value>
+  </property>
+
+  <!-- Hue proxy user setting -->
+  <property>
+    <name>hadoop.proxyuser.hue.hosts</name>
+    <value>*</value>
+  </property>
+
+  <property>
+    <name>hadoop.proxyuser.hue.groups</name>
+    <value>*</value>
+  </property>
+
+  <property>
+    <name>hadoop.proxyuser.root.groups</name>
+    <value>hadoop</value>
+  </property>
+
+  <property>
+    <name>ha.zookeeper.quorum</name>
+    <value>{% for host in groups['cdh5-zookeeper'] %}{% if loop.last  %}{{host}}:2181{% else %}{{host}}:2181,{% endif %}{% endfor %}</value>
+    <description>配置Zookeeper 管理HDFS</description>
+  </property>
+</configuration>

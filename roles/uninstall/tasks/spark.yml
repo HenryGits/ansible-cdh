@@ -1,0 +1,24 @@
+---
+  - name: 检查spark文件是否存在
+    shell: ls {{cdh_all_app_path}}/spark
+    ignore_errors: True
+    register: result
+
+  - name: 存在先停止spark
+    shell: sh stop-all.sh chdir={{cdh_all_app_path}}/spark/sbin/
+    when: result|succeeded
+
+  - name: 存在则删除spark文件
+    file: path={{cdh_all_app_path}}/spark state=absent
+    when: result|succeeded
+
+  - name: 移除用户spark
+    user: name=spark state=absent
+    ignore_errors: True
+
+  - name: chkconfig移除spark服务
+    shell: chkconfig --del spark
+    ignore_errors: True
+
+  - name: 移除定时任务
+    cron: name="start spark" minute={{cron_time}} hour=* day=* month=* weekday=* job="sh {{tmp_dir}}/spk_crontab.sh" user=root state=absent

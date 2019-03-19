@@ -1,0 +1,45 @@
+---
+#安装数据库模块
+
+  - name: 创建安装用户组 dinstall
+    group: gid=2014 name=dinstall
+    ignore_errors: True
+
+  - name: 创建安装用户 dmdba
+    shell: useradd -g dinstall -m -d /home/dmdba -s /bin/bash dmdba
+    ignore_errors: True
+
+  - name: 初始化用户密码
+    shell: echo "{{dmdba_passwd}}" | passwd --stdin "dmdba"
+
+  - name: 解压数据库安装包
+    unarchive: src={{dmdb_package_name}} dest={{presto_directory}}/
+
+  - name: 修改目录名称
+    command: mv {{presto_directory}}/{{dmdb_after_unzip_name}} {{dmdb_deposit_directory}}
+
+  - name: 将install.xml放到安装目录下
+    template: src=install_dm.xml.j2 dest={{dmdb_deposit_directory}}/install.xml owner=root group=root mode=0755
+
+  - name: 将create_sb_user.sql放到安装目录下
+    template: src=create_sb_user.sql dest={{dmdb_deposit_directory}}/create_sb_user.sql owner=root group=root mode=0755
+
+  - name: 将dm7_dm.sh放到安装目录下
+    template: src=dm7_dm.sh.j2 dest={{dmdb_deposit_directory}}/dm7_dm.sh owner=root group=root mode=0755
+
+  - name: 开始安装dm7_dm
+    shell: sh {{dmdb_deposit_directory}}/dm7_dm.sh start
+    ignore_errors: True
+    async: 180
+    poll: 2
+
+  - name: 重启服务
+    shell: service DmServiceDMSERVER restart
+    ignore_errors: True
+
+################################################# 定时拉起 #######################################################################
+  - name: 处理定时任务模板文件dmdb_crontab.sh.j2
+    template: src=dmdb_crontab.sh.j2 dest={{tmp_dir}}/dm_db_crontab.sh owner=root group=root mode=0777
+
+  - name: 加入定时任务
+    cron: name="start dmdb" minute={{cron_time}} hour=* day=* month=* weekday=* job="sh {{tmp_dir}}/dm_db_crontab.sh" user=root state=present

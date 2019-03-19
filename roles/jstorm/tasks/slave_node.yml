@@ -1,0 +1,23 @@
+---
+######################################### jstorm 服务 #########################################################################
+  - name: 启动jstorm服务
+    shell: nohup bin/jstorm supervisor & chdir={{cdh_all_app_path}}/jstorm/
+
+  - name: 处理模板文件slave_jstorm.sh.j2
+    template: src=slave_jstorm.sh.j2 dest={{cdh_all_app_path}}/jstorm/jstorm.sh owner=root group=root mode=0777
+
+  - name: jstorm加入开机启动
+    file: src={{cdh_all_app_path}}/jstorm/jstorm.sh dest=/etc/init.d/jstorm owner=root group=root mode=0777 state=link force=yes
+
+  - name: chkconfig加入jstorm服务
+    shell: chkconfig --add jstorm
+
+  - name: jstorm开机自启动
+    service: name=jstorm state=restarted enabled=yes
+
+################################################# 定时拉起 #######################################################################
+  - name: 处理定时任务模板文件jstorm_crontab.sh.j2
+    template: src=jstorm_crontab.sh.j2 dest={{tmp_dir}}/jst_crontab.sh owner=root group=root mode=0777
+
+  - name: 加入定时任务
+    cron: name="start jstorm" minute={{cron_time}} hour=* day=* month=* weekday=* job="sh {{tmp_dir}}/jst_crontab.sh" user=root state=present

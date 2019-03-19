@@ -1,0 +1,6 @@
+---
+
+  #动态匹配task文件
+  - include_tasks: "{{ deploy }}.yml"
+
+

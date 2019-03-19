@@ -1,0 +1,42 @@
+---
+
+  - name: namenode初始化脚本
+    template: src=hdfs dest={{cdh_all_app_path}}/hadoop/bin/hdfs owner=hadoop group=hadoop mode=0755
+
+  - name: hadoop启动脚本start-all.sh
+    template: src=start-all.sh dest={{cdh_all_app_path}}/hadoop/sbin/start-all.sh owner=hadoop group=hadoop mode=0755
+
+  - name: 同步（Master0）元数据
+    shell: nohup bin/hdfs namenode -bootstrapStandby & chdir={{cdh_all_app_path}}/hadoop/
+
+  - name: 等待成功同步namenode元数据
+    wait_for: path={{dfs_namenode_name_dir}}
+
+  - name: 启动namenode
+    shell: sh hadoop-daemon.sh start namenode chdir={{cdh_all_app_path}}/hadoop/sbin/
+
+  - name: 等待成功格式化namenode
+    wait_for: path={{dfs_namenode_name_dir}}
+
+  - name: 启动resourcemanager
+    shell: sh yarn-daemon.sh start resourcemanager chdir={{cdh_all_app_path}}/hadoop/sbin/
+
+
+
+  - name: 处理启动脚本hadoop.sh
+    template: src=hadoop.sh.j2 dest=/etc/init.d/hadoop owner=root group=root mode=0777
+
+  - name: chkconfig加入hadoop服务
+    shell: chkconfig --add hadoop
+
+  - name: hadoop开机自启动
+    service: name=hadoop state=restarted enabled=yes
+
+
+
+################################################# 定时拉起 #######################################################################
+  - name: 处理定时任务模板文件hadoop_crontab.sh.j2
+    template: src=hadoop_crontab.sh.j2 dest={{tmp_dir}}/hadoop_crontab.sh owner=root group=root mode=0777
+
+  - name: 加入定时任务
+    cron: name="start hadoop" minute={{cron_time}} hour=* day=* month=* weekday=* job="sh {{tmp_dir}}/hadoop_crontab.sh" user=root state=present

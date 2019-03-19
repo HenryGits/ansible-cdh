@@ -1,0 +1,26 @@
+---
+  - name: 启动spark
+    shell: sh start-all.sh chdir={{cdh_all_app_path}}/spark/sbin/
+
+  - name: 等待1分钟
+    pause: minutes=1
+
+
+
+  - name: 设置spark启动脚本文件
+    template: src=spark.sh.j2 dest=/etc/init.d/spark owner=root group=root mode=0777
+
+  - name: chkconfig加入spark服务
+    shell: chkconfig --add spark
+
+  - name: spark开机自启动
+    service: name=spark state=restarted enabled=yes
+
+
+
+################################################# 定时拉起 #######################################################################
+  - name: 处理定时任务模板文件spark_crontab.sh.j2
+    template: src=spark_crontab.sh.j2 dest={{tmp_dir}}/spk_crontab.sh owner=root group=root mode=0777
+
+  - name: 加入定时任务
+    cron: name="start spark" minute={{cron_time}} hour=* day=* month=* weekday=* job="sh {{tmp_dir}}/spk_crontab.sh" user=root state=present

@@ -1,0 +1,7 @@
+---
+  - name: 初始化mongodb集群
+    shell: sh {{tmp_dir}}/mongodb.sh
+    register: status
+
+  - name: print mongodb clusters msg
+    debug: msg={{status.stdout.split('\n')}}

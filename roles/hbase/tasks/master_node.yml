@@ -1,0 +1,28 @@
+---
+  - name: 重启zk
+    shell: sh zkServer.sh restart chdir={{cdh_all_app_path}}/zookeeper/bin/
+
+  - name: 启动hbase
+    shell: nohup sh start-hbase.sh >/dev/null 2>&1 & chdir={{cdh_all_app_path}}/hbase/bin/
+
+  - name: 等待1分钟
+    pause: minutes=1
+
+
+  - name: 处理启动脚本hbase.sh
+    template: src=hbase.sh.j2 dest=/etc/init.d/hbase owner=root group=root mode=0777
+
+  - name: chkconfig加入hbase服务
+    shell: chkconfig --add hbase
+
+  - name: hbase开机自启动
+    service: name=hbase state=restarted enabled=yes
+
+
+
+################################################# 定时拉起 #######################################################################
+  - name: 处理定时任务模板文件hbase_crontab.sh.j2
+    template: src=hbase_crontab.sh.j2 dest={{tmp_dir}}/hb_crontab.sh owner=root group=root mode=0777
+
+  - name: 加入定时任务
+    cron: name="start hbase" minute={{cron_time}} hour=* day=* month=* weekday=* job="sh {{tmp_dir}}/hb_crontab.sh" user=root state=present

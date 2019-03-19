@@ -1,0 +1,24 @@
+---
+
+  - name: 新建用户spark并获取root权限
+    user: name=spark shell=/bin/bash groups=hadoop home=/usr/spark createhome=yes system=yes
+    ignore_errors: True
+
+  - name: 创建cdh5文件夹
+    file: path={{cdh_all_app_path}} state=directory
+
+  - name: 解压spark安装包
+    unarchive: src={{spark_package_name}} dest={{cdh_all_app_path}}/
+
+  - name: 更改spark文件名称
+    shell: mv -f {{cdh_all_app_path}}/spark* {{cdh_all_app_path}}/spark
+
+  - name: 修改文件的所有组、人、权限
+    file: path={{cdh_all_app_path}}/spark  recurse=Yes owner=spark group=hadoop mode=0755
+
+  - name: 设置spark配置文件
+    template: src={{item}} dest={{cdh_all_app_path}}/spark/conf/{{item}} owner=spark group=hadoop mode=0755
+    with_items:
+    - spark-env.sh
+    - slaves
+    - log4j.properties

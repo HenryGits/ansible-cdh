@@ -1,0 +1,20 @@
+---
+  #安装presto模块
+  - name: 所有节点的presto配置
+    hosts: presto-all
+    remote_user: root
+    roles:
+       - { role: presto, tags: "all_presto", deploy: "all_presto" }
+
+  - name: coordinator节点的presto配置
+    hosts: presto-master
+    remote_user: root
+    roles:
+       - { role: presto, tags: "master_presto", deploy: "master_presto" }
+
+  - name: slave节点的presto配置
+    hosts: presto-all:!presto-master
+    remote_user: root
+    roles:
+       - { role: presto, tags: "slave_presto", deploy: "slave_presto" }
+

@@ -1,0 +1,8 @@
+coordinator=true
+node-scheduler.include-coordinator=true
+http-server.http.port=9990
+query.max-memory={{ansible_memtotal_mb//2}}MB
+query.max-memory-per-node={{ansible_memtotal_mb//2//5}}MB
+query.max-total-memory-per-node={{ansible_memtotal_mb//2//3}}MB
+discovery-server.enabled=true
+discovery.uri=http://{{inventory_hostname}}:9990

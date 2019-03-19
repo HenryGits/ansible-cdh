@@ -1,0 +1,147 @@
+#基础设置模块
+---
+  - name: 检查文件是否存在
+    shell: ls /root/.ssh/
+    ignore_errors: True
+    register: result
+
+  - name: 存在则删除ssh证书文件
+    file: path=/root/.ssh/id_rsa state=absent
+    when: result|succeeded
+
+  - name: 在每台机器上创建私钥
+    shell: ssh-keygen -t rsa -b 2048 -P '' -f /root/.ssh/id_rsa
+
+  - name: 创建ssh公钥临时存放位置
+    file: path=/root/.ssh/sshkeys state=directory mode=0755
+
+  - name: 拷贝公钥到临时文件
+    shell: cp -f /root/.ssh/id_rsa.pub /root/.ssh/sshkeys/{{inventory_hostname}}_id_rsa.pub
+
+  - name: 将公钥分发到所有机器上
+    copy: src=/root/.ssh/sshkeys dest=/root/.ssh/sshkeys owner=root group=root mode=0644
+
+  - name : 从远程机器上拉取文件
+    fetch:
+      src: /root/.ssh/sshkeys/{{inventory_hostname}}_id_rsa.pub
+      dest: /root/.ssh/sshkeys/
+      flat: yes
+
+  - name: 将/root/.ssh/sshkeys目录里所有的文件合并到/root/.ssh/authorized_keys一个文件中
+    assemble: src=/root/.ssh/sshkeys/ dest=/root/.ssh/authorized_keys owner=root group=root mode=0644
+
+  - name: 删除临时文件sshkeys
+    file: path=/root/.ssh/sshkeys state=absent
+
+  - name: 将authorized_keys分发到所有机器上
+    copy: src=/root/.ssh/authorized_keys dest=/root/.ssh/ owner=root group=root mode=0644
+
+  - name: 创建临时文件存放位置
+    file: path={{tmp_dir}} state=directory mode=0755 owner=root group=root
+
+  - name: 检查文件是否存在
+    shell: ls /etc/hosts.bak
+    ignore_errors: True
+    register: hosts_result
+
+  - name: 不存在则备份/etc/hosts文件
+    shell: mv /etc/hosts /etc/hosts.bak
+    when: hosts_result|failed
+
+  - name: 设置/etc/hosts
+    template: src=hosts.j2 dest=/etc/hosts
+
+  - name: 将ansible端的hosts复制到各自机器上
+    copy: src=/etc/hosts dest=/etc/ owner=root group=root mode=0644
+
+  - name: 检查文件是否存在
+    shell: ls /etc/hostname.bak
+    ignore_errors: True
+    register: hostname_result
+
+  - name: 不存在则备份/etc/hostname文件
+    shell: mv /etc/hostname /etc/hostname.bak
+    when: hostname_result|failed
+
+  - name: 设置/etc/hostname
+    template: src=hostname.j2 dest=/etc/hostname
+
+  - name: hostname立即生效
+    shell: hostname {{inventory_hostname}}
+
+  #1.关闭所有节点的SELINUX
+  - name: 关闭所有节点的SELINUX
+    lineinfile:
+      dest: /etc/selinux/config
+      regexp: '^SELINUX='
+      line: 'SELINUX=disabled'
+
+  #2.关闭所有节点的IP防火墙
+  - name: 关闭所有节点的IP防火墙
+    service: name=iptables state=stopped enabled=no
+    ignore_errors: True
+
+  #3.关闭所有节点的防火墙
+  - name: 关闭所有节点的firewall防火墙
+    service: name=firewalld state=stopped enabled=no
+    ignore_errors: True
+
+  #优化服务器参数
+  - name: 检查文件是否存在
+    shell: ls /etc/security/limits.conf.bak
+    ignore_errors: True
+    register: limits_result
+
+  - name: 不存在则备份/etc/security/limits.conf文件
+    shell: mv /etc/security/limits.conf /etc/security/limits.conf.bak
+    when: limits_result|failed
+
+  - name: optimization args
+    #优化所有服务器打开文件数
+    template: backup=yes src=limits.conf.j2 dest=/etc/security/limits.conf
+
+  - name: 检查文件是否存在
+    shell: ls /etc/sysctl.conf.bak
+    ignore_errors: True
+    register: sysctl_result
+
+  - name: 不存在则备份/etc/sysctl.conf文件
+    shell: mv /etc/sysctl.conf /etc/sysctl.conf.bak
+    when: sysctl_result|failed
+
+  - name: optimization args
+    template: backup=yes src=sysctl.conf.j2 dest=/etc/sysctl.conf
+    notify:
+    - sysctl on
+
+  - name: configure rsyslog with the imfile module
+    template: src=rsyslog.conf.j2 dest=/etc/rsyslog.d/30-imfile.conf owner=root group=root mode=0644
+    notify:
+    - restart rsyslog
+
+#  - name: 检查文件是否存在
+#    shell: ls /etc/chrony.conf.bak
+#    ignore_errors: True
+#    register: chrony_result
+#
+#  - name: 不存在则备份/etc/chrony.conf文件
+#    shell: mv /etc/chrony.conf /etc/chrony.conf.bak
+#    when: chrony_result|failed
+
+#  - name: 检查文件是否存在
+#    shell: ls /etc/ssh/ssh_config.bak
+#    ignore_errors: True
+#    register: ssh_result
+#
+#  - name: 不存在则备份/etc/ssh/ssh_config文件
+#    shell: mv /etc/ssh/ssh_config /etc/ssh/ssh_config.bak
+#    when: ssh_result|failed
+
+  - name: 检查文件是否存在
+    shell: ls /root/.bashrc.bak
+    ignore_errors: True
+    register: bashrc_result
+
+  - name: 不存在则备份/root/.bashrc文件
+    shell: mv /root/.bashrc /root/.bashrc.bak
+    when: bashrc_result|failed

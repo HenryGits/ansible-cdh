@@ -1,0 +1,19 @@
+---
+  - name: 创建cdh5文件夹
+    file: path={{cdh_all_app_path}} state=directory
+
+  - name: 软链接到/usr/bin
+    file: src={{java_deposit_path}}/{{jdk_version}}/bin/java dest=/usr/bin/java owner=root group=root mode=0755 state=link force=yes
+
+  - name: 拷贝es rpm包到{{cdh_all_app_path}}/elasticsearch/下
+    copy: src={{es_rpm_name}} dest={{cdh_all_app_path}}/elasticsearch/
+
+  - name: 安装es rpm包
+    shell: yum -y install {{es_rpm_name}} chdir={{cdh_all_app_path}}/elasticsearch/
+    ignore_errors: True
+
+  - name: 设置elasticsearch配置文件
+    template: src=jvm.options.j2 dest=/etc/elasticsearch/jvm.options owner=root group=root mode=0755
+
+  - name: 创建gc日志文件
+    file: path=/var/log/gc.log state=touch owner=root group=root mode=0777

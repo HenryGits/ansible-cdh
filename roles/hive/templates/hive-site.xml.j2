@@ -1,0 +1,113 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+
+<configuration>
+
+    <!-- Hive Configuration can either be stored in this file or in the hadoop configuration files  -->
+    <!-- that are implied by Hadoop setup variables.                                                -->
+    <!-- Aside from Hadoop setup variables - this file is provided as a convenience so that Hive    -->
+    <!-- users do not have to edit hadoop configuration files (that may be managed as a centralized -->
+    <!-- resource).                                                                                 -->
+
+    <!-- Hive Execution Parameters -->
+
+    <property>
+        <name>javax.jdo.option.ConnectionURL</name>
+        <value>jdbc:mysql://{{groups["mysql-master"][0]}}:3306/cdh_hive?createDatabaseIfNotExist=true&amp;characterEncoding=utf-8&amp;useSSL=false</value>
+    </property>
+    <property>
+        <name>javax.jdo.option.ConnectionDriverName</name>
+        <value>com.mysql.jdbc.Driver</value>
+    </property>
+    <property>
+        <name>javax.jdo.option.ConnectionUserName</name>
+        <value>root</value>
+    </property>
+    <property>
+        <name>javax.jdo.option.ConnectionPassword</name>
+        <value>{{mysql_password}}</value>
+    </property>
+
+    <property>
+        <name>datanucleus.autoCreateSchema</name>
+        <value>false</value>
+    </property>
+    <property>
+        <name>datanucleus.fixedDatastore</name>
+        <value>true</value>
+    </property>
+    <property>
+        <name>datanucleus.autoStartMechanism</name>
+        <value>SchemaTable</value>
+    </property>
+
+    <property>
+        <name>hive.metastore.warehouse.dir</name>
+        <value>/user/hive/warehouse</value>
+        <description>指定HDFS内hive数据存放目录。HDFS自动创建。默认：/user/hive/warehouse</description>
+    </property>
+
+    <property>
+        <name>hive.exec.scratchdir</name>
+        <value>{{hive_tmp_dir}}/scratchdir</value>
+        <description>
+            <!--   指定HDFS内hive数据临时文件存放目录。启动hive，HDFS即自动创建 -->
+            <!-- HDFS路径，可hadoop fs -ls / 查看。默认：/tmp/hive -->
+        </description>
+
+    </property>
+    <property>
+        　　
+        <name>system:java.io.tmpdir</name>
+        <value>{{hive_tmp_dir}}</value>
+        <description>指定下文可用的${system:java.io.tmpdir}。默认对应 /tmp</description>
+    </property>
+    <property>
+        <name>hive.exec.local.scratchdir</name>
+        <value>{{hive_tmp_dir}}/iotmp</value>
+        <description>Local scratch space for Hive jobs</description>
+    </property>
+
+    <property>
+        <name>hive.metastore.uris</name>
+        <value>thrift://{{groups['cdh5-hive'][0]}}:9083</value>
+    </property>
+
+    <property>
+        <name>hive.server2.thrift.port</name>
+        <value>10000</value>
+    </property>
+    <property>
+        <name>hive.server2.thrift.bind.host</name>
+        <value>{{groups['cdh5-hive'][0]}}</value>
+    </property>
+
+    <property>
+        <name>hive.support.concurrency</name>
+        <value>true</value>
+    </property>
+    <property>
+        <name>hive.zookeeper.quorum</name>
+        <value>{% for host in groups['cdh5-zookeeper'] %}{% if loop.last  %}{{host}}{% else %}{{host}},{% endif %}{% endfor %}</value>
+    </property>
+    <property>
+        <name>hbase.zookeeper.quorum</name>
+        <value>{% for host in groups['cdh5-zookeeper'] %}{% if loop.last  %}{{host}}{% else %}{{host}},{% endif %}{% endfor %}</value>
+    </property>
+</configuration>

@@ -1,0 +1,43 @@
+---
+
+  - name: 删除安装用户组 dinstall
+    group: gid=2014 name=dinstall state=absent
+    ignore_errors: True
+
+  - name: 删除安装用户 dmdba
+    shell: userdel dmdba
+    ignore_errors: True
+
+  - name: 存在则停止服务
+    shell: ps -ef | grep dmdbms | grep -v grep | tr -s " "|cut -d" " -f2 | xargs kill -9
+    ignore_errors: True
+    when: result|succeeded
+
+  - name: 检查文件是否存在
+    shell: ls {{dmdb_deposit_directory}}
+    ignore_errors: True
+    register: result
+
+  - name: 存在则删除原始文件
+    file: path={{dmdb_deposit_directory}} state=absent
+    when: result|succeeded
+
+  - name: 检查是否有安装过数据库
+    shell: ls {{dm7_dmdbms_path}}
+    ignore_errors: True
+    register: dmdbms_result
+
+  - name: 将dmdb_uninstall.sh放到临时目录下
+    template: src=dmdb_uninstall.sh.j2 dest={{tmp_dir}}/dmdb_uninstall.sh owner=root group=root mode=0755
+    when: dmdbms_result|succeeded
+
+  - name: 有则卸载数据库
+    shell: sh {{tmp_dir}}/dmdb_uninstall.sh chdir={{dm7_dmdbms_path}}/
+    when: dmdbms_result|succeeded
+
+  - name: 删除日志文件
+    file: path={{dm7_dmdbms_path}} state=absent
+    when: dmdbms_result|succeeded
+
+  - name: 移除定时任务
+    cron: name="start dmdb" minute={{cron_time}} hour=* day=* month=* weekday=* job="sh {{tmp_dir}}/dm_db_crontab.sh" user=root state=absent

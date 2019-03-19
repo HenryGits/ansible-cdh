@@ -1,0 +1,21 @@
+---
+
+  - name: 检查文件是否存在
+    shell: ls {{presto_directory}}/presto
+    ignore_errors: True
+    register: result
+
+  - name: 停止服务
+    shell: ./launcher stop chdir={{presto_directory}}/presto/bin/
+    when: result|succeeded
+
+  - name: 存在则删除presto文件
+    file: path={{presto_directory}}/presto state=absent
+    when: result|succeeded
+
+  - name: chkconfig移除presto服务
+    shell: chkconfig --del presto
+    ignore_errors: True
+
+  - name: 移除定时任务
+    cron: name="start presto" minute={{cron_time}} hour=* day=* month=* weekday=* job="sh {{tmp_dir}}/pst_crontab.sh" user=root state=absent

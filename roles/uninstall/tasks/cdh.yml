@@ -1,0 +1,69 @@
+---
+  - name: 所有节点删除用户cloudera-scm
+    shell: userdel cloudera-scm
+    ignore_errors: True
+
+  - name: 停止cm服务
+    shell: /etc/init.d/cloudera-scm-server stop
+    ignore_errors: True
+
+  - name: 停止cm服务
+    shell: /etc/init.d/cloudera-scm-agent stop
+    ignore_errors: True
+
+  - name: 杀掉cloudera的supervisord进进程
+    shell: ps -ef | grep supervisord | grep -v "grep" | awk '{print $2}'| xargs kill -9
+    ignore_errors: True
+
+  - name: 杀掉cloudera的server和agent进程
+    shell: ps -ef | grep cm | grep -v "grep" | awk '{print $2}'| xargs kill -9
+    ignore_errors: True
+
+  - name: 释放设备或资源cloudera-scm-agent
+    shell: umount {{cloudera_manager_directory}}/cm-5.13.0/run/cloudera-scm-agent/process
+    ignore_errors: True
+
+  - name: 释放设备或资源cloudera-scm-server
+    shell: umount {{cloudera_manager_directory}}/cm-5.13.0/run/cloudera-scm-server/process
+    ignore_errors: True
+
+  - name: 检查cm-5.13.0文件是否存在
+    shell: ls {{cloudera_manager_directory}}/cm-5.13.0
+    ignore_errors: True
+    register: result
+
+  - name: 存在则删除cm-5.13.0文件
+    file: path={{cloudera_manager_directory}}/cm-5.13.0 state=absent
+    when: result|succeeded
+
+  - name: 存在则删除cloudera文件
+    file: path={{cloudera_manager_directory}}/cloudera state=absent
+    when: result|succeeded
+
+  - name: 设置cm卸载脚本
+    template: src=uninstall-cm.sh.j2 dest=/tmp/uninstall-cm.sh owner=root group=root mode=0777
+
+  - name: 运行卸载cm脚本
+    shell: sh /tmp/uninstall-cm.sh
+
+  - name: 检查文件是否存在
+    shell: ls {{python_path}}/gcc
+    ignore_errors: True
+    register: result
+
+  - name: 存在则删除gcc文件
+    file: path={{python_path}}/gcc state=absent
+    when: result|succeeded
+
+  - name: 移除cloudera-scm-agent服务
+    shell: chkconfig --del cloudera-scm-agent
+    ignore_errors: True
+
+  - name: 移除cloudera-scm-server服务
+    shell: chkconfig --del cloudera-scm-server
+    ignore_errors: True
+
+  - name: 移除定时任务
+    cron: name="start cdh" minute={{cron_time}} hour=* day=* month=* weekday=* job="sh {{tmp_dir}}/cm_crontab.sh" user=root state=absent
+    ignore_errors: True
+

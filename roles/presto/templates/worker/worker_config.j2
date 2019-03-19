@@ -1,0 +1,6 @@
+coordinator=false
+http-server.http.port=9990
+query.max-memory={{ansible_memtotal_mb//2}}MB
+query.max-memory-per-node={{ansible_memtotal_mb//2//5}}MB
+query.max-total-memory-per-node={{ansible_memtotal_mb//2//3}}MB
+discovery.uri=http://{{groups["presto-master"][0]}}:9990

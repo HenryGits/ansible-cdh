@@ -1,0 +1,60 @@
+---
+  - name: 创建hadoop组
+    group: name=hadoop gid=2018 state=present system=yes
+    ignore_errors: True
+
+  - name: 新建用户mongodb并获取root权限
+    user: name=mongodb shell=/bin/bash groups=hadoop append=yes
+    ignore_errors: True
+
+  - name: 创建cdh5文件夹
+    file: path={{cdh_all_app_path}} state=directory
+
+  - name: 解压mongodb安装包
+    unarchive: src={{mongodb_package_name}} dest={{cdh_all_app_path}}/
+
+  - name: 更改mongodb文件名称
+    shell: mv -f {{cdh_all_app_path}}/mongodb* {{cdh_all_app_path}}/mongodb
+
+  - name: 修改文件的所有组、人、权限
+    file: path={{cdh_all_app_path}}/mongodb  recurse=Yes owner=mongodb group=hadoop mode=0777
+
+  - name: 创建dbpath
+    file: path={{cdh_all_app_path}}/mongodb/data state=directory owner=mongodb group=hadoop mode=0664
+
+  - name: 创建logpath
+    file: path={{cdh_all_app_path}}/mongodb/mongodb.log state=touch owner=mongodb group=hadoop mode=0664
+
+  - name: 升级glibc
+    shell: rpm -Uvh *-2.17-55.el6.x86_64.rpm --force --nodeps chdir={{rpm_dependent_directory}}/
+    when: ansible_os_family == 'RedHat' and ansible_distribution_major_version == '6'
+    ignore_errors: True
+
+  - name: 设置mongodb配置文件
+    template: src=mongodb.conf.j2 dest={{cdh_all_app_path}}/mongodb/mongodb.conf owner=mongodb group=hadoop mode=0664
+
+  - name: mongodb集群配置脚本
+    template: src=mongodb.sh.j2 dest={{tmp_dir}}/mongodb.sh owner=mongodb group=hadoop mode=0664
+
+  - name: 启动mongodb
+    shell: bin/mongod --config mongodb.conf chdir={{cdh_all_app_path}}/mongodb/
+
+
+
+  - name: 设置mongodb启动脚本文件
+    template: src=mongo.sh.j2 dest=/etc/init.d/mongodb owner=root group=root mode=0777
+
+  - name: chkconfig加入mongodb服务
+    shell: chkconfig --add mongodb
+
+  - name: mongodb开机自启动
+    service: name=mongodb state=restarted enabled=yes
+
+
+
+################################################# 定时拉起 #######################################################################
+  - name: 处理定时任务模板文件mongo_crontab.sh.j2
+    template: src=mongo_crontab.sh.j2 dest={{tmp_dir}}/mongo_crontab.sh owner=root group=root mode=0777
+
+  - name: 加入定时任务
+    cron: name="start mongodb" minute={{cron_time}} hour=* day=* month=* weekday=* job="sh {{tmp_dir}}/mongo_crontab.sh" user=root state=present

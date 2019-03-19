@@ -1,0 +1,58 @@
+---
+
+  - name: 解压缩gcc包
+    unarchive: src={{gcc_pag}} dest={{python_path}}/
+
+  - name: 更改gcc文件名称
+    shell: mv -f {{python_path}}/gcc* {{python_path}}/gcc
+
+  - name: gcc文件授权
+    file: path={{python_path}}/gcc owner=root group=root mode=0755 recurse=true
+
+  - name: 软链接到libstdc++.so.6
+    file: src={{python_path}}/gcc/x86_64-unknown-linux-gnu/libstdc++-v3/src/.libs/libstdc++.so.6 dest=/usr/lib64/libstdc++.so.6 owner=root group=root mode=0755 state=link force=yes
+
+  - name: 检查文件是否存在
+    shell: ls {{python_path}}/python
+    ignore_errors: True
+    register: py_result
+
+  - name: 解压缩python包
+    unarchive: src={{python_pag}} dest={{python_path}}/
+    when: py_result|failed
+
+  - name: 更改python文件名称
+    shell: mv -f {{python_path}}/python* {{python_path}}/python
+    when: py_result|failed
+
+  - name: python文件授权
+    file: path={{python_path}}/python owner=root group=root mode=0755 recurse=true
+
+  - name: 软链接到python2.7
+    file: src={{python_path}}/python/bin/python2.7 dest=/usr/bin/python2.7 owner=root group=root mode=0755 state=link force=yes
+
+  - name: 软链接到libpython2.7.so.1.0
+    file: src={{python_path}}/python/lib/libpython2.7.so.1.0 dest=/usr/local/lib/libpython2.7.so.1.0 owner=root group=root mode=0755 state=link force=yes
+
+  - name: 修改ld.so.conf配置
+    template: src=ld.so.conf.j2 dest=/etc/ld.so.conf group=root owner=root mode=0755
+
+  - name: 使配置生效
+    shell: /sbin/ldconfig -v
+    ignore_errors: True
+
+  - name: 软链接到python
+    file: src={{python_path}}/python/bin/python2.7 dest=/usr/bin/python owner=root group=root mode=0755 state=link force=yes
+
+  - name: 软链接到pip
+    file: src={{python_path}}/python/bin/pip2.7 dest=/usr/bin/pip owner=root group=root mode=0755 state=link force=yes
+
+  - name: 修改yum头部python配置
+    template: src=yum.j2 dest=/usr/bin/yum group=root owner=root mode=0755
+
+  - name: 检查是否安装成功
+    shell: python -V
+    register: version_result
+
+  - name: print python msg
+    debug: msg={{version_result.stderr}}

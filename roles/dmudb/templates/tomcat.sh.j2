@@ -1,0 +1,60 @@
+#!/bin/bash
+
+#chkconfig:35 95 1
+#description:script to start/stop dmudb
+
+##############################################
+#Startup script for Tomcat on Linux
+
+
+#filename tomcat.sh
+#将脚本文件保存在/etc/init.d中，命名为tomcat
+#1.设置脚本属性: chmod a+x tomcat
+#2.给脚本权限:   chmod 755 tomcat
+#3.添加到服务:   chkconfig --add tomcat
+#4 配置成功:     service tomcat start
+
+#Make sure the java and the tomcat installation path has been added to the PATH
+
+
+JAVA_HOME={{java_deposit_path}}/{{jdk_version}}         #JDK安装目录
+CATALINA_HOME={{dmudb_tomcat_directory}}/tomcat         #tomcat安装目录
+export JAVA_HOME
+export CATALINA_HOME
+
+
+###############################################
+
+start_tomcat=$CATALINA_HOME/bin/startup.sh              #tomcat启动文件
+stop_tomcat=$CATALINA_HOME/bin/shutdown.sh                  #tomcat关闭文件
+
+start() {
+        echo -n "Starting tomcat: "
+        ${start_tomcat}
+        echo "tomcat start ok."
+}
+stop() {
+        echo -n "Shutting down tomcat: "
+        ${stop_tomcat}
+        echo "tomcat stop ok."
+}
+
+# See how we were called
+
+case "$1" in
+  start)
+        start
+        ;;
+  stop)
+        stop
+        ;;
+  restart)
+        stop
+        sleep 10
+        start
+        ;;
+  *)
+        echo "Usage: $0 {start|stop|restart}"
+esac
+
+exit 0

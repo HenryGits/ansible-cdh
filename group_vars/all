@@ -1,0 +1,186 @@
+---
+#全局变量
+#安装中临时脚本存放目录
+tmp_dir: /tmp/dmcop2_cdh
+
+#python
+python_path: /usr/local
+
+#python升级包
+python_pag: python2.7-cdh.zip
+gcc_pag: gcc-build-4.8.2.zip
+
+#CDH环境需要的rpm包
+rpm_dependent_directory: /usr/local/dependent
+
+# for oracle distributed packages you should use java-<version> as name
+jdk_version: jdk1.8.0_102
+jdk_package_name: jdk-8u102-linux-x64.tar.gz
+java_deposit_path: /usr/java
+
+# 优化cloudera服务器vm.swappiness参数
+kernel_swappiness: 10
+
+# 优化所有服务器打开文件数
+limits_nofile_hard: 65536
+limits_nofile_soft: 65536
+hard_nproc: 65536
+
+# elasticsearch参数
+vm_max_map_count: 655360
+
+# chrony -允许哪些服务器到这台服务器来同步时间
+chrony_allow: 192.168/16
+
+# Configure rsyslog polling.
+rsyslog_polling_interval_secs: 10
+
+#定时任务(2分钟一次)
+cron_time: "*/2"
+
+#开启启动ping从节点的时间
+ping_time: 120
+
+#MYSQL数据库
+el6_mysql_package_name: mysql-5.7.22-1.el6.x86_64.rpm-bundle.tar
+el7_mysql_package_name: mysql-5.7.22-1.el7.x86_64.rpm-bundle.tar
+
+mysql_rpm_directory: /usr/local/mysql
+copy_mysql_to_directory: /usr/local
+mysql_password: Admin@123
+mysql_jdbc_jar: mysql-connector-java-5.1.44.jar
+
+#CDH
+cloudera_manager_directory: /opt
+manifest: manifest.json
+cloudera_manager_offline_package: /opt/cloudera/parcel-repo
+
+el7_cloudera_manager_package_name: cloudera-manager-centos7-cm5.13.0_x86_64.tar.gz
+el7_cdh_parcel: CDH-5.13.0-1.cdh5.13.0.p0.29-el7.parcel
+el7_cdh_parcel_sha: CDH-5.13.0-1.cdh5.13.0.p0.29-el7.parcel.sha
+
+el6_cloudera_manager_package_name: cloudera-manager-el6-cm5.13.0_x86_64.tar.gz
+el6_cdh_parcel: CDH-5.13.0-1.cdh5.13.0.p0.29-el6.parcel
+el6_cdh_parcel_sha: CDH-5.13.0-1.cdh5.13.0.p0.29-el6.parcel.sha
+
+#DMDB
+dmdb_package_name: dm7_V7.1.6.3-Build(2017.08.08)_neoky6_64.tar.gz
+dmdb_after_unzip_name: dm7_neoky6_64
+dmdb_deposit_directory: /opt/dm7
+dmdba_passwd: 123456
+
+#dm7_install_home=/opt/dm7
+dm7_download_url:
+dm7_listener_port: 5236
+dm7_sysuser: SYSDBA
+dm7_tablespace_size: 256
+dm7_dmdbms_path: /home/vcap/store/dmdbms
+
+dm_connector_name: dm
+dm_connection_user: SYSDBA
+dm_connection_password: SYSDBA001
+
+udm_connector_name: udm
+udm_connection_user: BIGDATA
+udm_connection_password: SYSDBA001
+
+hive_connector_name: hive-hadoop2
+
+
+#presto
+presto_package_name: presto-server-0.205.tar.gz
+presto_directory: /opt
+#presto_jvm_Xmx: 1G
+#query_max_memory: 24GB
+#query_max_memory_per_node: 256MB
+#query_max_total_memory_per_node: 256MB
+log_level: INFO
+
+#动态prestos插件配置
+prestos:
+  dm:
+    #插件名称
+    presto_plugin_name: dm
+    #插件配置文件位置
+    presto_plugin: catalog/dm.properties
+  udm:
+    presto_plugin_name: udm
+    presto_plugin: catalog/udm.properties
+  hive:
+    presto_plugin_name: hive-hadoop2
+    presto_plugin: catalog/hive.properties
+  mongodb:
+    presto_plugin_name: mongodb
+    presto_plugin: catalog/mongodb.properties
+
+
+#mongodb
+mongodb_package_name: mongodb-linux-x86_64-rhel70-3.6.5.tgz
+
+#DMUDB conf
+dmudb_package_name: dmudb.war
+dmudb_connector_name: dm
+dmudb_conf_directory: /dmudb/WEB-INF/conf
+dmudb_connection_user: ROOT
+dmudb_connection_password: SYSDBA001
+dmudb_tomcat_directory: /usr/local
+tomcat_package_name: apache-tomcat-8.5.31.tar.gz
+dmudb_port: 8880
+dmdp_fg_service_username: STORAGESERV
+dmdp_fg_service_password: 888888888
+
+
+#cdh-hadoop大数据组件
+cdh_all_app_path: /usr/local/cdh5
+
+
+#elasticsearch
+elasticsearch_package_name: elasticsearch-6.2.4.tar.gz
+
+#hadoop相关目录
+hadoop_package_name: hadoop-2.6.0-cdh5.13.0.tar.gz
+hadoop_data_dir: /home/hadoop
+hadoop_journalnode_dir: /home/hadoop/journaldata/jn
+dfs_namenode_name_dir: /home/hadoop/hdfs/namenode
+dfs_datanode_data_dir: /home/hadoop/hdfs/datanode
+yarn_nodemanager_local_dirs: /home/hadoop/nodemanager
+yarn_nodemanager_log_dirs: /home/hadoop/nodemanager/logs
+mapreduce_task_tmp_dir: /home/hadoop/mapred
+
+#hadoop-env.sh JVM参数
+#HADOOP_PORTMAP_OPTS: 512m
+#HADOOP_CLIENT_OPTS: 512m
+
+#flume
+flume_package_name: flume-ng-1.6.0-cdh5.13.0.tar.gz
+
+#hive
+hive_package_name: hive-1.1.0-cdh5.13.0.tar.gz
+hive_tmp_dir: /home/hive/tmp
+property_hive_log_dir: /home/hive/logs
+
+zookeeper_package_name: zookeeper-3.4.5-cdh5.13.0.tar.gz
+zookeeper_datadir: /home/zookeeper
+
+hbase_package_name: hbase-1.2.0-cdh5.13.0.tar.gz
+hbase_tmp_dir: /home/hbase/tmp
+
+hue_package_name: hue-3.9.0-cdh5.13.0.tar.gz
+
+kafka_package_name: kafka_2.12-1.0.0.tgz
+kafka_tmp_dir: /home/kafka/tmp
+
+oozie_package_name: oozie-4.1.0-cdh5.13.0.tar.gz
+ext_package_name: ext-2.2.zip
+
+spark_package_name: spark-2.3.0-bin-hadoop2.6.tgz
+scala_package_name: scala-2.12.2.tgz
+
+sqoop_package_name: sqoop-1.4.6-cdh5.13.0.tar.gz
+
+es_rpm_name: elasticsearch-6.2.4.rpm
+es_head_name: elasticsearch-head.tar.gz
+kibana_rpm_name: kibana-6.2.4-x86_64.rpm
+filebeat_rpm_name: filebeat-6.2.4-x86_64.rpm
+
+jstorm_package_name: jstorm-2.1.1.zip

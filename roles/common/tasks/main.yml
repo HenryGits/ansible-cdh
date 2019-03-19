@@ -1,0 +1,4 @@
+#基础设置模块
+---
+  #动态匹配task文件
+  - include_tasks: "{{ deploy }}.yml"

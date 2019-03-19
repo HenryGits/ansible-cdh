@@ -1,0 +1,33 @@
+---
+
+  - name: 设置elasticsearch配置文件
+    template: src=es_slave.yml.j2 dest=/etc/elasticsearch/elasticsearch.yml owner=elasticsearch group=hadoop mode=0755
+
+  - name: 启动es服务
+    service: name=elasticsearch state=restarted enabled=yes
+
+  - name: 等待1分钟
+    pause: minutes=1
+
+  #安装filebeat
+  - name: 拷贝filebeat rpm包到{{cdh_all_app_path}}/elasticsearch
+    copy: src={{filebeat_rpm_name}} dest={{cdh_all_app_path}}/elasticsearch/
+
+  - name: 安装filebeat rpm包
+    shell: yum -y install {{filebeat_rpm_name}} chdir={{cdh_all_app_path}}/elasticsearch/
+    ignore_errors: True
+
+  - name: 设置filebeat配置文件
+    template: src=filebeat.yml.j2 dest=/etc/filebeat/filebeat.yml owner=root group=root mode=0755
+
+  - name: 启动filebeat服务
+    service: name=filebeat state=restarted enabled=yes
+
+
+
+################################################# 定时拉起 #######################################################################
+  - name: 处理定时任务模板文件es_master_crontab.sh.j2
+    template: src=es_slave_crontab.sh.j2 dest={{tmp_dir}}/es_crontab.sh owner=root group=root mode=0777
+
+  - name: 加入定时任务
+    cron: name="start es" minute={{cron_time}} hour=* day=* month=* weekday=* job="sh {{tmp_dir}}/es_crontab.sh" user=root state=present

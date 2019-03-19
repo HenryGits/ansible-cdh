@@ -1,0 +1,67 @@
+#!/bin/bash
+set +e
+
+#SCRIPT_DIR=$(dirname $0)
+#. $SCRIPT_DIR/init.sh
+
+#log_debug "Kicking off ctl script as `whoami` with $1"
+#log_debug "Download url provided: {{dm7_download_url}}"
+
+#sudo mount -o remount,exec /tmp
+case $1 in
+
+  start)
+
+    cd {{dmdb_deposit_directory}}/
+    
+    dm7_install_bin="DMInstall.bin"
+    installFile=`basename {{dm7_download_url}}`
+    if [ "${dm7_install_bin}" == "" ]; then
+      #log_debug "Downloading DM7 from : {{dm7_download_url}}"
+      curl -k {{dm7_download_url}} -o ${installFile}
+      downloadStatus=$?
+      
+      if [ "$downloadStatus" != "0" ]; then
+          #log_debug "Download of the binary not successfull from {{dm7_download_url}}, exiting...."
+          exit 1
+      fi
+      
+      #log_debug "Downloaded DM7 and saved as : ${installFile}"
+      dm7_install_bin=$installFile
+    fi
+    
+    if [ ! -d "{{dm7_dmdbms_path}}/" ]; then
+      chmod +x ./$dm7_install_bin
+      #log_debug "Starting install of DM7."
+      ./$dm7_install_bin -q {{dmdb_deposit_directory}}/install.xml
+      #log_debug "Finished Installing DM7."
+    
+      sed -i.bak "s/DM7_DEFAULT_TABLESPACE_NAME/{{udm_connector_name}}/g;	\
+             s/DM7_DEFAULT_TABLESPACE_SIZE/{{dm7_tablespace_size}}/g;			\
+             s/DM7_DEFAULT_USER/SYSDBA/g;														\
+             s/DM7_DEFAULT_PASSWD/{{udm_connection_password}}/g"												\
+             {{dmdb_deposit_directory}}/create_sb_user.sql;
+    
+      #log_debug "Updated sql scripts for additional DM7 config changes"
+      cp {{dmdb_deposit_directory}}/create_sb_user.sql {{tmp_dir}}/
+      #log_debug "Running disql to create servicebroker user and tablespace."
+
+      sleep 30
+
+      cd {{dm7_dmdbms_path}}/bin
+      ./disql SYSDBA/{{udm_connection_password}}@{{inventory_hostname}}:{{dm7_listener_port}} '`{{tmp_dir}}/create_sb_user.sql'
+      #log_debug "Finished configuration changes on DM7 using disql"
+    else
+      /etc/init.d/DmServiceDMSERVER start
+    fi
+    ;;
+
+  stop)
+
+      /etc/init.d/DmServiceDMSERVER stop
+      ;;
+
+  *)
+    echo "Usage: ctl {start|stop}" ;;
+esac
+    

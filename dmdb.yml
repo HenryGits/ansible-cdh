@@ -1,0 +1,13 @@
+---
+  #达梦数据库模块
+  - name: dm数据库配置
+    hosts: dm-master
+    remote_user: root
+    roles:
+       - { role: dmdb, tags: "dm7_dm", deploy: "dm7_dm" }
+
+#  - name: udm数据库配置
+#    hosts: udm-master
+#    remote_user: root
+#    roles:
+#       - { role: dmdb, tags: "dm7_udm", deploy: "dm7_udm"}

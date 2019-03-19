@@ -1,0 +1,53 @@
+#安装从节点mysql服务
+---
+  - name: 创建rpm文件存放位置
+    file: path={{mysql_rpm_directory}} state=directory mode=0755
+
+  - name: 解压el6 tar包到rpm的存放位置
+    unarchive: src={{el6_mysql_package_name}} dest={{mysql_rpm_directory}}/
+    when: ansible_os_family == 'RedHat' and ansible_distribution_major_version == '6'
+
+  - name: 解压el7 tar包到rpm的存放位置
+    unarchive: src={{el7_mysql_package_name}} dest={{mysql_rpm_directory}}/
+    when: ansible_os_family == 'RedHat' and ansible_distribution_major_version == '7'
+
+  - name: 从节点安装server,client,common,libs服务
+    shell: yum -y install mysql-community-{server,client,common,libs,devel}-* chdir={{mysql_rpm_directory}}/
+    ignore_errors: True
+
+  - name: 删除mysql data文件
+    file: path=/var/lib/mysql state=absent
+
+  - name: 删除mysql log文件
+    file: path=/var/log/mysqld.log state=absent
+
+  - name: 设置my.cf文件
+    template: src=slave_my.cnf.j2 dest=/etc/my.cnf owner=root group=root mode=0755
+
+  - name: 重启mysql服务
+    service: name=mysqld state=restarted
+
+  - name: 处理模板文件mysql.sh.j2
+    template: src=mysql.sh.j2 dest={{tmp_dir}}/mysql.sh owner=root group=root mode=0755
+
+  - name: 初始化mysql密码
+    shell: sh {{tmp_dir}}/mysql.sh
+    ignore_errors: True
+
+  - name: 重启mysql设置mysqld开启自启动
+    service: name=mysqld state=restarted  enabled=yes
+
+  - name: 处理模板文件master_slave_mysql.sh.j2
+    template: src=master_slave_mysql.sh.j2 dest={{tmp_dir}}/master_slave_mysql.sh owner=root group=root mode=0777
+
+  - name: 关联主数据库配置
+    shell: sh {{tmp_dir}}/master_slave_mysql.sh
+    ignore_errors: True
+
+
+################################################# 定时拉起 #######################################################################
+  - name: 处理定时任务模板文件mysql_crontab.sh.j2
+    template: src=mysql_crontab.sh.j2 dest={{tmp_dir}}/my_sql_crontab.sh owner=root group=root mode=0777
+
+  - name: 加入定时任务
+    cron: name="start mysql" minute={{cron_time}} hour=* day=* month=* weekday=* job="sh {{tmp_dir}}/my_sql_crontab.sh" user=root state=present

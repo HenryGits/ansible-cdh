@@ -1,0 +1,113 @@
+---
+
+  - name: 清理安装环境
+    hosts: common
+    remote_user: root
+    roles:
+      - { role: uninstall, tags: "dmdb", deploy: "dmdb" }
+      - { role: uninstall, tags: "dmudb", deploy: "dmudb" }
+      - { role: uninstall, tags: "elasticsearch", deploy: "elasticsearch" }
+      - { role: uninstall, tags: "jstorm", deploy: "jstorm" }
+      - { role: uninstall, tags: "kafka", deploy: "kafka" }
+      - { role: uninstall, tags: "mongodb", deploy: "mongodb" }
+      - { role: uninstall, tags: "presto", deploy: "presto" }
+
+#达梦数据库模块
+  - name: dm数据库配置
+    hosts: dm-master
+    remote_user: root
+    roles:
+      - { role: dmdb, tags: "dm7_dm", deploy: "dm7_dm" }
+
+#  - name: udm数据库配置
+#    hosts: udm-master
+#    remote_user: root
+#    roles:
+#      - { role: dmdb, tags: "dm7_udm", deploy: "dm7_udm" }
+
+  - name: 配置mongodb组件
+    hosts: mongodb-all
+    remote_user: root
+    sudo_user: mongodb
+    roles:
+       - { role: mongodb, tags: "all_mongodb_node", deploy: "all_node"}
+
+  - name: 启动mongodb
+    hosts: mongodb-all[0]
+    remote_user: root
+    sudo_user: mongodb
+    roles:
+       - { role: mongodb, tags: "master_mongodb_node", deploy: "master_node"}
+
+
+  - name: 配置elasticsearch组件
+    hosts: elasticsearch-all
+    remote_user: root
+    roles:
+      - { role: elasticsearch, tags: "all_es_node", deploy: "all_node"}
+
+  - name: 启动elasticsearch集群
+    hosts: elasticsearch-all[0]
+    remote_user: root
+    roles:
+      - { role: elasticsearch, tags: "master_es_node", deploy: "master_node"}
+
+  - name: 启动elasticsearch集群
+    hosts: elasticsearch-all:!elasticsearch-all[0]
+    remote_user: root
+    roles:
+      - { role: elasticsearch, tags: "slave_es_node", deploy: "slave_node"}
+
+
+  - name: 配置kafka组件
+    hosts: cdh5-kafka
+    remote_user: root
+    sudo_user: kafka
+    roles:
+    - { role: kafka, tags: "all_kafka_node", deploy: "all_node"}
+
+
+    #部署presto模块
+  - name: 所有节点的presto配置
+    hosts: presto-all
+    remote_user: root
+    roles:
+       - { role: presto, tags: "all_presto", deploy: "all_presto" }
+
+  - name: coordinator节点的presto配置
+    hosts: presto-master
+    remote_user: root
+    roles:
+       - { role: presto, tags: "master_presto", deploy: "master_presto" }
+
+  - name: slave节点的presto配置
+    hosts: presto-all:!presto-master
+    remote_user: root
+    roles:
+       - { role: presto, tags: "slave_presto", deploy: "slave_presto" }
+
+
+  - name: 部署dmudb
+    hosts: dmudb-master
+    remote_user: root
+    roles:
+      - { role: dmudb, tags: "dmudb" }
+
+
+  - name: 配置jstorm组件
+    hosts: cdh5-jstorm
+    remote_user: root
+    roles:
+    - { role: jstorm, tags: "all_jstorm_node", deploy: "all_node"}
+
+  - name: 启动jstorm集群
+    hosts: cdh5-jstorm[0]
+    remote_user: root
+    roles:
+    - { role: jstorm, tags: "master_jstorm_node", deploy: "master_node"}
+
+  - name: 启动jstorm集群
+    hosts: cdh5-jstorm:!cdh5-jstorm[0]
+    remote_user: root
+    roles:
+    - { role: jstorm, tags: "slave_jstorm_node", deploy: "slave_node"}

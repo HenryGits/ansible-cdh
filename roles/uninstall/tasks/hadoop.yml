@@ -1,0 +1,41 @@
+---
+  - name: 移除hadoop组
+    group: name=hadoop gid=2018 state=absent
+    ignore_errors: True
+
+  - name: 移除用户
+    user: name=hadoop state=absent
+    ignore_errors: True
+
+  - name: 检查hadoop文件是否存在
+    shell: ls {{cdh_all_app_path}}/hadoop
+    ignore_errors: True
+    register: result
+
+  - name: 存在则删除hadoop文件
+    file: path={{cdh_all_app_path}}/hadoop state=absent
+    when: result|succeeded
+
+  - name: 存在则删除hadoop data文件
+    file: path={{hadoop_data_dir}} state=absent
+    when: result|succeeded
+
+  - name: 存在则杀掉hadoop相关进程
+    shell: ps -ef | grep hadoop | grep -v "grep" | awk '{print $2}'| xargs kill -9
+    when: result|succeeded
+    ignore_errors: True
+
+  - name: 存在则删除hadoop环境变量文件
+    file: path=/etc/profile.d/hadoop state=absent
+    when: result|succeeded
+
+  - name: 存在则删除hadoop配置文件
+    file: path=/etc/hadoop state=absent
+    when: result|succeeded
+
+  - name: chkconfig移除hadoop服务
+    shell: chkconfig --del hadoop
+    ignore_errors: True
+
+  - name: 移除定时任务
+    cron: name="start hadoop" minute={{cron_time}} hour=* day=* month=* weekday=* job="sh {{tmp_dir}}/hadoop_crontab.sh" user=root state=absent

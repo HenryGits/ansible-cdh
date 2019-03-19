@@ -1,0 +1,73 @@
+#基础设置模块
+---
+
+  - name: 拷贝cdh parcel到master节点/opt/cloudera/parcel-repo下
+    copy: src={{el6_cdh_parcel}} dest={{cloudera_manager_offline_package}}/ owner=root group=root mode=0644
+    when: ansible_os_family == 'RedHat' and ansible_distribution_major_version == '6'
+
+  - name: 拷贝cdh parcel到master节点/opt/cloudera/parcel-repo下
+    copy: src={{el7_cdh_parcel}} dest={{cloudera_manager_offline_package}}/ owner=root group=root mode=0644
+    when: ansible_os_family == 'RedHat' and ansible_distribution_major_version == '7'
+
+  - name: 拷贝cdh parcel_sha到master节点/opt/cloudera/parcel-repo下
+    copy: src={{el6_cdh_parcel_sha}} dest={{cloudera_manager_offline_package}}/ owner=root group=root mode=0644
+    when: ansible_os_family == 'RedHat' and ansible_distribution_major_version == '6'
+
+  - name: 拷贝cdh parcel_sha到master节点/opt/cloudera/parcel-repo下
+    copy: src={{el7_cdh_parcel_sha}} dest={{cloudera_manager_offline_package}}/ owner=root group=root mode=0644
+    when: ansible_os_family == 'RedHat' and ansible_distribution_major_version == '7'
+
+  - name: 拷贝cdh manifest.json到master节点/opt/cloudera/parcel-repo下
+    copy: src={{manifest}} dest={{cloudera_manager_offline_package}}/ owner=root group=root mode=0644
+
+#  - name: 拷贝mysql-connector-java-5.1.44.jar到/opt/cm-5.13.0/share/cmf/lib下
+#    copy: src={{mysql_jdbc_jar}} dest={{cloudera_manager_directory}}/cm-5.13.0/share/cmf/lib/ owner=root group=root mode=0644
+#  - name: 设置hdfs.j2
+#    template: src=hdfs.j2 dest={{cloudera_manager_directory}}/cloudera/parcels/CDH-5.13.0-1.cdh5.13.0.p0.29/bin/hdfs owner=root group=root mode=0755
+
+  - name: 处理模板文件cdh_mysql.sh.j2
+    template: src=cdh_mysql.sh.j2 dest={{tmp_dir}}/cdh_mysql.sh owner=root group=root mode=0755
+
+  - name: 创建相关库
+    shell: sh {{tmp_dir}}/cdh_mysql.sh
+
+  - name: 初始化主节点上的cdh库
+    shell: "{{cloudera_manager_directory}}/cm-5.13.0/share/cmf/schema/scm_prepare_database.sh mysql -h {{groups['mysql-master'][0]}} -uroot -p{{mysql_password}} --scm-host {{groups['mysql-master'][0]}} scm scm scm"
+
+  - name: 启动主节点cloudera-scm-server服务
+    shell: nohup {{cloudera_manager_directory}}/cm-5.13.0/etc/init.d/cloudera-scm-server start &
+
+  - name: 等待5分钟
+    pause: minutes=5
+
+  #启动服务
+  - name: 启动主节点cloudera-scm-agent服务
+    shell: nohup {{cloudera_manager_directory}}/cm-5.13.0/etc/init.d/cloudera-scm-agent start &
+
+  #软链接
+  - name: ln cloudera-scm-agent
+    file: src={{cloudera_manager_directory}}/cm-5.13.0/etc/init.d/cloudera-scm-agent dest=/etc/init.d/cloudera-scm-agent owner=root group=root mode=0755 state=link
+    ignore_errors: True
+
+  - name: ln cloudera-scm-server
+    file: src={{cloudera_manager_directory}}/cm-5.13.0/etc/init.d/cloudera-scm-server dest=/etc/init.d/cloudera-scm-server owner=root group=root mode=0755 state=link
+    ignore_errors: True
+
+################################################# 配置开机启动 #######################################################################
+  - name: 配置cloudera-scm-agent开机启动
+    shell: chkconfig cloudera-scm-agent on
+
+  - name:  配置cloudera-scm-server开机启动
+    shell: chkconfig cloudera-scm-server on
+
+  - name: 等待60s
+    pause: minutes=1
+
+
+################################################# 定时拉起 #######################################################################
+  - name: 处理定时任务模板文件cdh_crontab.sh.j2
+    template: src=cdh_crontab.sh.j2 dest={{tmp_dir}}/cm_crontab.sh owner=root group=root mode=0777
+
+  - name: 加入定时任务
+    cron: name="start cdh" minute={{cron_time}} hour=* day=* month=* weekday=* job="sh {{tmp_dir}}/cm_crontab.sh" user=root state=present
+

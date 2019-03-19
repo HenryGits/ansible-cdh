@@ -1,0 +1,29 @@
+---
+  - name: 检查jstorm文件是否存在
+    shell: ls {{cdh_all_app_path}}/jstorm
+    ignore_errors: True
+    register: result
+
+  - name: 存在则删除jstorm文件
+    file: path={{cdh_all_app_path}}/jstorm state=absent
+    when: result|succeeded
+
+  - name: 存在则杀掉jstorm相关进程
+    shell: ps -ef | grep jstorm | grep -v "grep" | awk '{print $2}'| xargs kill -9
+    when: result|succeeded
+    ignore_errors: True
+
+  - name: 移除用户
+    user: name=jstorm  state=absent
+    ignore_errors: True
+
+  - name: 删除~/.jstorm
+    file: path=~/.jstorm  state=absent
+    when: result|succeeded
+
+  - name: chkconfig移除jstorm服务
+    shell: chkconfig --del jstorm
+    ignore_errors: True
+
+  - name: 移除定时任务
+    cron: name="start jstorm" minute={{cron_time}} hour=* day=* month=* weekday=* job="sh {{tmp_dir}}/jst_crontab.sh" user=root state=absent

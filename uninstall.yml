@@ -1,0 +1,28 @@
+---
+
+  - name: 清理安装环境
+    hosts: common
+    remote_user: root
+    roles:
+      - { role: chkconfig, tags: "chkconfig" }
+      - { role: uninstall, tags: "cdh", deploy: "cdh" }
+      - { role: uninstall, tags: "dmdb", deploy: "dmdb" }
+      - { role: uninstall, tags: "dmudb", deploy: "dmudb" }
+      - { role: uninstall, tags: "elasticsearch", deploy: "elasticsearch" }
+      - { role: uninstall, tags: "flume", deploy: "flume" }
+      - { role: uninstall, tags: "hadoop", deploy: "hadoop" }
+      - { role: uninstall, tags: "hbase", deploy: "hbase" }
+      - { role: uninstall, tags: "hive", deploy: "hive" }
+      - { role: uninstall, tags: "hue", deploy: "hue" }
+      - { role: uninstall, tags: "jdk", deploy: "jdk" }
+      - { role: uninstall, tags: "jstorm", deploy: "jstorm" }
+      - { role: uninstall, tags: "kafka", deploy: "kafka" }
+      - { role: uninstall, tags: "mongodb", deploy: "mongodb" }
+      - { role: uninstall, tags: "mysql", deploy: "mysql" }
+      - { role: uninstall, tags: "oozie", deploy: "oozie" }
+      - { role: uninstall, tags: "presto", deploy: "presto" }
+      - { role: uninstall, tags: "scala", deploy: "scala" }
+      - { role: uninstall, tags: "spark", deploy: "spark" }
+      - { role: uninstall, tags: "sqoop", deploy: "sqoop" }
+      - { role: uninstall, tags: "zookeeper", deploy: "zookeeper" }
+      - { role: uninstall, tags: "common", deploy: "common" }

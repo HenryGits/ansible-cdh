@@ -1,0 +1,13 @@
+#!/bin/bash
+
+svc_cm="cloudera-scm"
+
+#linux判断某服务是否启动
+if ps -ef | grep $svc_cm | egrep -v grep >/dev/null
+then
+    echo "" >/dev/null
+else
+    #重启cm服务
+    /etc/init.d/cloudera-scm-server restart
+    /etc/init.d/cloudera-scm-agent restart
+fi

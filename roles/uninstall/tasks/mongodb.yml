@@ -1,0 +1,26 @@
+---
+
+  - name: 移除用户mongodb
+    user: name=mongodb state=absent
+    ignore_errors: True
+
+  - name: 检查mongodb文件是否存在
+    shell: ls {{cdh_all_app_path}}/mongodb
+    ignore_errors: True
+    register: result
+
+  - name: 存在则停止服务
+    shell: ps -ef | grep mongod | grep -v "grep" | awk '{print $2}'| xargs kill -9
+    when: result|succeeded
+    ignore_errors: True
+
+  - name: 存在则删除mongodb文件
+    file: path={{cdh_all_app_path}}/mongodb state=absent
+    when: result|succeeded
+
+  - name: chkconfig移除mongodb服务
+    shell: chkconfig --del mongodb
+    ignore_errors: True
+
+  - name: 移除定时任务
+    cron: name="start mongodb" minute={{cron_time}} hour=* day=* month=* weekday=* job="sh {{tmp_dir}}/mongo_crontab.sh" user=root state=absent

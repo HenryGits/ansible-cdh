@@ -1,0 +1,12 @@
+#!/bin/bash
+
+svc_cm="tomcat"
+
+#linux判断某服务是否启动
+if ps -ef | grep $svc_cm | egrep -v grep >/dev/null
+then
+    echo "" >/dev/null
+else
+    #重启dmdb服务
+    /usr/sbin/service tomcat restart
+fi

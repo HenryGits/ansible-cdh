@@ -1,0 +1,45 @@
+---
+  - name: 新建用户kafka并获取root权限
+    user: name=kafka shell=/bin/bash groups=hadoop home=/usr/kafka createhome=yes system=yes
+    ignore_errors: True
+
+  - name: 创建cdh5文件夹
+    file: path={{cdh_all_app_path}} state=directory
+
+  - name: 解压kafka安装包
+    unarchive: src={{kafka_package_name}} dest={{cdh_all_app_path}}/
+
+  - name: 更改kafka文件名称
+    shell: mv -f {{cdh_all_app_path}}/kafka* {{cdh_all_app_path}}/kafka
+
+  - name: 修改文件的所有组、人、权限
+    file: path={{cdh_all_app_path}}/kafka  recurse=Yes owner=kafka group=hadoop mode=0755
+
+  - name: 设置kafka配置文件
+    template: src=server.properties dest={{cdh_all_app_path}}/kafka/config/server.properties owner=kafka group=hadoop mode=0664
+
+
+  - name: 启动kafka
+    shell: nohup ./kafka-server-start.sh -daemon {{cdh_all_app_path}}/kafka/config/server.properties & chdir={{cdh_all_app_path}}/kafka/bin/
+
+  - name: 等待1分钟
+    pause: minutes=1
+
+
+  - name: 设置kafka启动脚本文件
+    template: src=kafka.sh.j2 dest=/etc/init.d/kafka owner=root group=root mode=0777
+
+  - name: chkconfig加入kafka服务
+    shell: chkconfig --add kafka
+
+  - name: kafka开机自启动
+    service: name=kafka state=restarted enabled=yes
+
+
+
+################################################# 定时拉起 #######################################################################
+  - name: 处理定时任务模板文件kafka_crontab.sh.j2
+    template: src=kafka_crontab.sh.j2 dest={{tmp_dir}}/kfk_crontab.sh owner=root group=root mode=0777
+
+  - name: 加入定时任务
+    cron: name="start kafka" minute={{cron_time}} hour=* day=* month=* weekday=* job="sh {{tmp_dir}}/kfk_crontab.sh" user=root state=present

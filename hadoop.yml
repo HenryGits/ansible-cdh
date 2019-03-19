@@ -1,0 +1,170 @@
+---
+  #安装大数据组件集群
+  - name: 配置zookeeper组件
+    hosts: cdh5-zookeeper
+    remote_user: root
+    sudo_user: zookeeper
+    roles:
+       - { role: zookeeper, tags: "cdh_zookeeper"}
+
+
+  - name: hadoop配置
+    hosts: hadoop
+    remote_user: root
+    sudo_user: hadoop
+    roles:
+       - { role: hadoop, tags: "all_hadoop_node", deploy: "all_node"}
+
+  - name: 启动hadoop
+    hosts: NameNodes[0]
+    remote_user: root
+    sudo_user: hadoop
+    roles:
+       - { role: hadoop, tags: "master_hadoop_node", deploy: "master_node"}
+
+
+  - name: 配置hbase组件
+    hosts: hadoop
+    remote_user: root
+    sudo_user: hbase
+    roles:
+       - { role: hbase, tags: "all_hbase_node", deploy: "all_node"}
+
+  - name: 启动hbase
+    hosts: NameNodes[0]
+    remote_user: root
+    sudo_user: hbase
+    roles:
+       - { role: hbase, tags: "master_hbase_node", deploy: "master_node"}
+
+
+  - name: 配置scala组件
+    hosts: hadoop
+    remote_user: root
+    roles:
+       - { role: scala, tags: "scala"}
+
+
+  - name: spark配置
+    hosts: hadoop
+    remote_user: root
+    sudo_user: spark
+    roles:
+       - { role: spark, tags: "all_spark_node", deploy: "all_node"}
+
+  - name: 启动spark
+    hosts: NameNodes[0]
+    remote_user: root
+    sudo_user: spark
+    roles:
+       - { role: spark, tags: "master_spark_node", deploy: "master_node"}
+
+
+  - name: 配置hive组件
+    hosts: cdh5-hive
+    remote_user: root
+    sudo_user: hive
+    roles:
+       - { role: hive, tags: "cdh_hive"}
+
+
+  - name: 配置mongodb组件
+    hosts: mongodb-all
+    remote_user: root
+    sudo_user: mongodb
+    roles:
+       - { role: mongodb, tags: "all_mongodb_node", deploy: "all_node"}
+
+  - name: 启动mongodb
+    hosts: mongodb-all[0]
+    remote_user: root
+    sudo_user: mongodb
+    roles:
+       - { role: mongodb, tags: "master_mongodb_node", deploy: "master_node"}
+
+
+    #部署presto模块
+  - name: 所有节点的presto配置
+    hosts: presto-all
+    remote_user: root
+    roles:
+       - { role: presto, tags: "all_presto", deploy: "all_presto" }
+
+  - name: coordinator节点的presto配置
+    hosts: presto-master
+    remote_user: root
+    roles:
+       - { role: presto, tags: "master_presto", deploy: "master_presto" }
+
+  - name: slave节点的presto配置
+    hosts: presto-all:!presto-master
+    remote_user: root
+    roles:
+       - { role: presto, tags: "slave_presto", deploy: "slave_presto" }
+
+
+  - name: 配置sqoop组件
+    hosts: cdh5-sqoop
+    remote_user: root
+    sudo_user: sqoop
+    roles:
+       - { role: sqoop, tags: "sqoop"}
+
+
+  - name: 配置elasticsearch组件
+    hosts: elasticsearch-all
+    remote_user: root
+    roles:
+    - { role: elasticsearch, tags: "all_es_node", deploy: "all_node"}
+
+  - name: 启动elasticsearch集群
+    hosts: elasticsearch-all[0]
+    remote_user: root
+    roles:
+    - { role: elasticsearch, tags: "master_es_node", deploy: "master_node"}
+
+  - name: 启动elasticsearch集群
+    hosts: elasticsearch-all:!elasticsearch-all[0]
+    remote_user: root
+    roles:
+    - { role: elasticsearch, tags: "slave_es_node", deploy: "slave_node"}
+
+
+#  - name: 配置flume组件
+#    hosts: flume-all
+#    remote_user: root
+#    sudo_user: flume
+#    roles:
+#       - { role: flume, tags: "all_flume_node", deploy: "all_node"}
+#
+#  - name: 配置flume组件
+#    hosts: flume-all[0]
+#    remote_user: root
+#    sudo_user: flume
+#    roles:
+#       - { role: flume, tags: "mastre_flume_node", deploy: "master_node"}
+#
+#
+#  - name: 配置hue组件
+#    ##gather_facts: false
+#    hosts: cdh5-hue
+#    remote_user: root
+#    sudo_user: hue
+#    roles:
+#       - { role: hue, tags: "cdh_hue"}
+
+
+  - name: 配置kafka组件
+    hosts: cdh5-kafka
+    remote_user: root
+    sudo_user: kafka
+    roles:
+       - { role: kafka, tags: "all_kafka_node", deploy: "all_node"}
+
+
+#  - name: 配置oozie组件
+#    hosts: cdh5-oozie
+#    remote_user: root
+#    sudo_user: oozie
+#    roles:
+#       - { role: oozie, tags: "master_oozie_node", deploy: "master_node"}

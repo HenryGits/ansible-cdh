@@ -1,0 +1,19 @@
+---
+
+  - name: 创建jdk存放路径
+    file: path={{java_deposit_path}} state=directory mode=0755
+
+  - name: 解压jdk
+    unarchive: src={{jdk_package_name}} dest={{java_deposit_path}}/
+
+  - name: 设置环境变量/etc/profile.d/java
+    template: src=profile.j2 dest=/etc/profile.d/java owner=root group=root mode=0644
+
+  - name: 设置环境变量/root/.bashrc
+    template: src=bashrc.j2 dest=/root/.bashrc owner=root group=root mode=0644
+
+  - name: 使环境变量生效
+    shell: source /etc/profile.d/java
+
+  - name: 使环境变量立即生效
+    shell: source /root/.bashrc

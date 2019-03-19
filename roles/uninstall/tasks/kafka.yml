@@ -1,0 +1,25 @@
+---
+  - name: 检查kafka文件是否存在
+    shell: ls {{cdh_all_app_path}}/kafka
+    ignore_errors: True
+    register: result
+
+  - name: 存在则删除kafka文件
+    file: path={{cdh_all_app_path}}/kafka state=absent
+    when: result|succeeded
+
+  - name: 存在则杀掉kafka相关进程
+    shell: ps -ef | grep kafka | grep -v "grep" | awk '{print $2}'| xargs kill -9
+    when: result|succeeded
+    ignore_errors: True
+
+  - name: 移除用户kafka
+    user: name=kafka state=absent
+    ignore_errors: True
+
+  - name: chkconfig移除kafka服务
+    shell: chkconfig --del kafka
+    ignore_errors: True
+
+  - name: 移除定时任务
+    cron: name="start kafka" minute={{cron_time}} hour=* day=* month=* weekday=* job="sh {{tmp_dir}}/kfk_crontab.sh" user=root state=absent

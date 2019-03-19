@@ -1,0 +1,12 @@
+#!/bin/bash
+str=`grep root@localhost /var/log/mysqld.log |cut -b 92-103`
+mysql -uroot -p${str} --connect-expired-password<<EOF
+SET PASSWORD = PASSWORD('{{mysql_password}}');
+#修改密码
+ALTER USER 'root'@'localhost' PASSWORD EXPIRE NEVER;
+#设置root@%远程root访问
+GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' IDENTIFIED BY '{{mysql_password}}' WITH GRANT OPTION;
+#刷新权限
+FLUSH PRIVILEGES;
+EOF
+exit;

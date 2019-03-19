@@ -1,0 +1,22 @@
+---
+  #安装CDH模块
+  - name: 所有节点的CDH配置
+    hosts: cdh5-all
+    remote_user: root
+    roles:
+       - { role: cdh, tags: "all_cdh", deploy: "all_cdh"}
+
+  - name: master节点的CDH配置
+    hosts: cdh5-server
+    remote_user: root
+    roles:
+       - { role: cdh, tags: "master_cdh", deploy: "master_cdh"}
+
+  - name: slave节点的CDH配置
+    hosts: cdh5-all:!cdh5-server
+    remote_user: root
+    #设置串行化机器数量(命令一台一台执行)
+    serial: 1
+    roles:
+       - { role: cdh, tags: "slave_cdh", deploy: "slave_cdh"}
+

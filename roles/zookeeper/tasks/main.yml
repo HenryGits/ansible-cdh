@@ -1,0 +1,65 @@
+---
+
+  - name: 创建hadoop组
+    group: name=hadoop gid=2018 state=present system=yes
+    ignore_errors: True
+
+  - name: 新建用户zookeeper并获取root权限
+    user: name=zookeeper shell=/bin/bash groups=hadoop home=/usr/zookeeper createhome=yes system=yes
+    ignore_errors: True
+
+  - name: 设置环境变量/etc/profile.d/zookeeper
+    template: src=profile.j2 dest=/etc/profile.d/zookeeper owner=root group=root mode=0644
+
+  - name: 设置环境变量/root/.bashrc
+    template: src=bashrc.j2 dest=/root/.bashrc owner=root group=root mode=0644
+
+  - name: 使环境变量生效
+    shell: source /etc/profile.d/zookeeper
+
+  - name: 使环境变量立即生效
+    shell: source /root/.bashrc
+
+  - name: 创建cdh5文件夹
+    file: path={{cdh_all_app_path}} state=directory
+
+  - name: 创建zk data文件夹
+    file: path={{zookeeper_datadir}} state=directory
+
+  - name: 解压zookeeper安装包
+    unarchive: src={{zookeeper_package_name}} dest={{cdh_all_app_path}}/
+
+  - name: 更改zookeeper文件名称
+    shell: mv -f {{cdh_all_app_path}}/zookeeper* {{cdh_all_app_path}}/zookeeper
+
+  - name: 修改文件的所有组、人、权限
+    file: path={{cdh_all_app_path}}/zookeeper  recurse=Yes owner=zookeeper group=hadoop mode=0755
+
+  - name: 设置zookeeper配置文件
+    template: src=zoo.cfg.j2 dest={{cdh_all_app_path}}/zookeeper/conf/zoo.cfg owner=zookeeper group=hadoop mode=0644
+
+  - name: 设置myid
+    template: src=myid dest={{zookeeper_datadir}}/myid owner=zookeeper group=hadoop mode=0644
+
+  - name: 启动zookeeper server服务
+    shell: sh zkServer.sh start chdir={{cdh_all_app_path}}/zookeeper/bin/
+
+
+
+  - name: 设置zookeeper启动脚本文件
+    template: src=zookeeper.sh.j2 dest=/etc/init.d/zookeeper owner=root group=root mode=0777
+
+  - name: chkconfig加入zookeeper服务
+    shell: chkconfig --add zookeeper
+
+  - name: zookeeper开机自启动
+    service: name=zookeeper state=restarted enabled=yes
+
+
+
+################################################# 定时拉起 #######################################################################
+  - name: 处理定时任务模板文件zk_crontab.sh.j2
+    template: src=zk_crontab.sh.j2 dest={{tmp_dir}}/zk_crontab.sh owner=root group=root mode=0777
+
+  - name: 加入定时任务
+    cron: name="start zk" minute={{cron_time}} hour=* day=* month=* weekday=* job="sh {{tmp_dir}}/zk_crontab.sh" user=root state=present

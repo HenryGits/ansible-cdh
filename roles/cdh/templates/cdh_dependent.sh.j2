@@ -1,0 +1,20 @@
+#!/bin/bash
+rpm -ivh bind-* --replacefiles
+rpm -ivh chkconfig-* --replacefiles
+rpm -ivh cyrus-* --replacefiles
+rpm -ivh fuse-* --replacefiles
+rpm -ivh gcc-*.rpm cpp-*.rpm glibc-*.rpm libgcc-*.rpm libgomp-*.rpm libmpc-*.rpm kernel-*.rpm mpfr-*.rpm --replacefiles
+rpm -ivh httpd-*rpm apr-*.rpm mailcap-*.rpm --replacefiles
+rpm -ivh libxslt-* --replacefiles
+rpm -ivh mod_ssl-* --replacefiles
+rpm -ivh MySQL-python-* --replacefiles
+rpm -ivh openssl-*.rpm krb5-*.rpm zlib-*.rpm keyutils-*.rpm libcom_err-*.rpm libkadm5-*.rpm libselinux-*.rpm libverto-*.rpm libsepol-*.rpm pkgconfig-*.rpm pcre-*.rpm --replacefiles
+rpm -ivh perl-* --replacefiles
+rpm -ivh rpcbind-*.rpm libtirpc-*.rpm --replacefiles
+rpm -ivh postgresql-* --replacefiles
+rpm -ivh psmisc-* --replacefiles
+rpm -ivh sed-* --replacefiles
+rpm -ivh sqlite-* --replacefiles
+rpm -ivh swig-* --replacefiles
+rpm -ivh zlib-* --replacefiles
+rpm -ivh python-* --replacefiles

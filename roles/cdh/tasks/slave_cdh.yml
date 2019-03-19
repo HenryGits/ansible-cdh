@@ -1,0 +1,27 @@
+---
+
+  #软链接
+  - name: ln cloudera-scm-agent
+    file: src={{cloudera_manager_directory}}/cm-5.13.0/etc/init.d/cloudera-scm-agent dest=/etc/init.d/cloudera-scm-agent owner=root group=root mode=0755 state=link
+    ignore_errors: True
+
+  - name: 启动cloudera-scm-agent
+    shell: nohup /etc/init.d/cloudera-scm-agent start &
+    #service: name=cloudera-scm-agent state=started
+
+  - name: 等待60s
+    pause: minutes=1
+
+  #配置开机启动
+  - name: 配置cloudera-scm-agent开机启动
+    shell: chkconfig cloudera-scm-agent on
+    #service: name=cloudera-scm-agent state=started enabled=yes
+
+
+################################################# 定时拉起 #######################################################################
+  - name: 处理定时任务模板文件cdh_crontab.sh.j2
+    template: src=cdh_crontab.sh.j2 dest={{tmp_dir}}/cm_crontab.sh owner=root group=root mode=0777
+
+
+  - name: 加入定时任务
+    cron: name="start cdh" minute={{cron_time}} hour=* day=* month=* weekday=* job="sh {{tmp_dir}}/cm_crontab.sh" user=root state=present

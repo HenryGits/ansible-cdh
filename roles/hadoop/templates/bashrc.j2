@@ -1,0 +1,78 @@
+# .bashrc
+
+# User specific aliases and functions
+
+alias rm='rm -i'
+alias cp='cp -i'
+alias mv='mv -i'
+
+# Source global definitions
+if [ -f /etc/bashrc ]; then
+        . /etc/bashrc
+fi
+#JDK
+export JAVA_HOME={{java_deposit_path}}/{{jdk_version}}
+export CLASSPATH=.:$JAVA_HOME/lib
+export PATH=$JAVA_HOME/bin:$PATH
+
+#Hadoop
+export HADOOP_HOME={{cdh_all_app_path}}/hadoop
+export HADOOP_COMMON_HOME={{cdh_all_app_path}}/hadoop
+export PATH=$PATH:$HADOOP_HOME/bin:$HADOOP_HOME/sbin
+export HADOOP_MAPRED_HOME=$HADOOP_HOME
+export HADOOP_COMMON_LIB_NATIVE_DIR=$HADOOP_HOME/lib/native
+export HADOOP_HDFS_HOME=$HADOOP_HOME
+export YARN_HOME=$HADOOP_HOME
+export HADOOP_CONF_DIR=$HADOOP_HOME/etc/hadoop
+export YARN_CONF_DIR=$HADOOP_HOME/etc/hadoop
+export PATH=$PATH:$HADOOP_HOME/bin:$HADOOP_HOME/sbin
+export CLASSPATH=.:$CLASSPATH:$HADOOP_COMMON_HOME:$HADOOP_COMMON_HOME/lib:$HADOOP_MAPRED_HOME:$HADOOP_HDFS_HOME:$HADOOP_HDFS_HOME
+
+#Hbase
+export HBASE_HOME={{cdh_all_app_path}}/hbase
+export CLASSPATH=$CLASSPATH:$HBASE_HOME/lib
+export PATH=$HBASE_HOME/bin:$PATH
+
+#Pig
+export PIG_HOME={{cdh_all_app_path}}/pig
+export PIG_CLASSPATH=$PIG_HOME/lib:$HADOOP_HOME/etc/hadoop
+export PATH=/ROOT/server/bigdata/pig/bin:$PATH
+
+#Zookeeper
+export ZOOKEEPER_HOME={{cdh_all_app_path}}/zookeeper
+export CLASSPATH=.:$ZOOKEEPER_HOME/lib
+export PATH=$PATH:$ZOOKEEPER_HOME/bin
+
+#Hive
+export HIVE_HOME={{cdh_all_app_path}}/hive
+export HIVE_CONF=$HIVE_HOME/conf
+export CLASSPATH=$CLASSPATH:$HIVE_HOME/lib
+export PATH=$PATH:$HIVE_HOME/bin:$HIVE_HOME/conf
+
+#JStorm
+export JSTORM_HOME={{cdh_all_app_path}}/jstorm
+export CLASSPATH=$CLASSPATH:$JSTORM_HOME/lib
+export PATH=$PATH:$JSTORM_HOME/bin:$PATH
+
+#Scala
+export SCALA_HOME={{cdh_all_app_path}}/scala
+export CLASSPATH=.:$SCALA_HOME/lib
+export PATH=$PATH:$SCALA_HOME/bin
+
+#Spark
+export SPARK_HOME={{cdh_all_app_path}}/spark
+export PATH=$PATH:$SPARK_HOME/bin
+
+#Kylin
+export HIVE_HOME={{cdh_all_app_path}}/hive
+export HIVE_CONF=$HIVE_HOME/conf
+export CLASSPATH=$CLASSPATH:$HIVE_HOME/lib
+export PATH=$PATH:$HIVE_HOME/bin:$HIVE_HOME/conf
+
+#Sqoop
+export SQOOP_HOME={{cdh_all_app_path}}/sqoop
+export PATH=$PATH:$SQOOP_HOME/bin
+
+#Oozie
+export OOZIE_HOME={{cdh_all_app_path}}/oozie
+export PATH=$PATH:$OOZIE_HOME/bin

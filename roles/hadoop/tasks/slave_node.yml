@@ -1,0 +1,4 @@
+---
+
+  - name: 启动journalnode
+    shell: sh hadoop-daemon.sh start journalnode chdir={{cdh_all_app_path}}/hadoop/sbin/

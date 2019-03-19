@@ -1,0 +1,124 @@
+#============================基础设置模块==========================#
+#管理机配置
+[tmp]
+k8sstarter ansible_ssh_host=192.168.114.249 ansible_user=root ansible_ssh_pass=dameng777
+
+#控制机配置
+[common]
+cdh1.dmudb.dameng.com ansible_ssh_host=192.168.114.251 ansible_user=root ansible_ssh_pass=dameng777
+cdh2.dmudb.dameng.com ansible_ssh_host=192.168.114.252 ansible_user=root ansible_ssh_pass=dameng777
+cdh3.dmudb.dameng.com ansible_ssh_host=192.168.114.253 ansible_user=root ansible_ssh_pass=dameng777
+
+
+#此处无需配置
+[all:children]
+tmp
+common
+
+#============================mysql模块==========================#
+[mysql-master]
+cdh1.dmudb.dameng.com server_id=1
+
+[mysql-slave]
+cdh2.dmudb.dameng.com server_id=2
+cdh3.dmudb.dameng.com server_id=3
+
+#============================达梦数据库模块==========================#
+[dm-master]
+cdh2.dmudb.dameng.com
+
+#presto接入外部的dm(针对于客户现场已存在业务数据库。如果有则填写，如果没有，请勿填写!!!)
+#格式如下：cdh2.dmudb.dameng.com conn_user=SYSDBA conn_pwd=SYSDBA conn_port=5236
+[dm-external]
+
+#此处建议去掉，dm库只需要一台机器即可
+#[udm-master]
+#cdh3.dmudb.dameng.com
+
+#============================presto模块==========================#
+[presto-all]
+cdh1.dmudb.dameng.com presto_id=1
+cdh2.dmudb.dameng.com presto_id=2
+cdh3.dmudb.dameng.com presto_id=3
+
+[presto-master]
+cdh1.dmudb.dameng.com
+
+[dmudb-master]
+cdh3.dmudb.dameng.com
+
+#============================CDH模块==========================#
+[cdh5-all]
+cdh1.dmudb.dameng.com
+cdh2.dmudb.dameng.com
+cdh3.dmudb.dameng.com
+
+[cdh5-server]
+cdh1.dmudb.dameng.com
+
+#============================cdh-hadoop模块==========================#
+#集群master节点
+[NameNodes]
+cdh1.dmudb.dameng.com
+
+#集群slave节点
+[DataNodes]
+cdh2.dmudb.dameng.com
+cdh3.dmudb.dameng.com
+
+[cdh5-hive]
+cdh2.dmudb.dameng.com
+
+[cdh5-hue]
+cdh2.dmudb.dameng.com
+
+#为了实现高可用，必须配置[NameNodes]+[DataNodes]
+[cdh5-zookeeper]
+cdh1.dmudb.dameng.com zoo_id=1
+cdh2.dmudb.dameng.com zoo_id=2
+cdh3.dmudb.dameng.com zoo_id=3
+#slave3 zoo_id=4
+#slave4 zoo_id=5
+
+[cdh5-kafka]
+cdh1.dmudb.dameng.com broker_id=1
+cdh2.dmudb.dameng.com broker_id=2
+cdh3.dmudb.dameng.com broker_id=3
+#slave3 broker_id=4
+#slave4 broker_id=5
+
+[mongodb-all]
+cdh1.dmudb.dameng.com _id=1
+cdh2.dmudb.dameng.com _id=2
+cdh3.dmudb.dameng.com _id=3
+
+#oozie模块
+[cdh5-oozie]
+cdh1.dmudb.dameng.com
+
+[elasticsearch-all]
+cdh1.dmudb.dameng.com
+cdh2.dmudb.dameng.com
+cdh3.dmudb.dameng.com
+#slave3
+#slave4
+
+[flume-all]
+cdh1.dmudb.dameng.com
+cdh2.dmudb.dameng.com
+cdh3.dmudb.dameng.com
+#slave3
+#slave4
+
+[cdh5-sqoop]
+cdh3.dmudb.dameng.com
+
+[cdh5-jstorm]
+cdh1.dmudb.dameng.com
+cdh2.dmudb.dameng.com
+cdh3.dmudb.dameng.com
+
+#此处无需配置
+[hadoop:children]
+NameNodes
+DataNodes

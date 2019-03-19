@@ -1,0 +1,13 @@
+---
+  - name: 检查sqoop文件是否存在
+    shell: ls {{cdh_all_app_path}}/sqoop
+    ignore_errors: True
+    register: result
+
+  - name: 存在则删除sqoop文件
+    file: path={{cdh_all_app_path}}/sqoop state=absent
+    when: result|succeeded
+
+  - name: 移除用户sqoop
+    user: name=sqoop state=absent
+    ignore_errors: True

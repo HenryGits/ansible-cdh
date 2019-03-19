@@ -1,0 +1,28 @@
+#!/bin/bash
+
+svc_cm="hdfs"
+svc_historyserver="historyserver"
+scv_journalnode="journalnode"
+
+#linux判断某服务是否启动
+if ps -ef | grep $svc_cm | egrep -v grep >/dev/null
+then
+    echo "" >/dev/null
+else
+    #重启hdfs服务
+    /usr/sbin/service hadoop restart
+fi
+
+if ps -ef | grep $svc_historyserver | egrep -v grep >/dev/null
+then
+    echo "" >/dev/null
+else
+    sh {{cdh_all_app_path}}/hadoop/sbin/mr-jobhistory-daemon.sh start historyserver
+fi
+
+if ps -ef | grep $scv_journalnode | egrep -v grep >/dev/null
+then
+    echo "" >/dev/null
+else
+    sh {{cdh_all_app_path}}/hadoop/sbin/hadoop-daemon.sh start journalnode
+fi

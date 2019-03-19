@@ -1,0 +1,72 @@
+# replication options
+configsvr = true
+oplogSize =  4096
+replSet = clusters
+directoryperdb = true
+bind_ip = 127.0.0.1,{{inventory_hostname}}
+fork = true
+port = 27017
+maxConns = 500
+
+#where to store the data.
+dbpath = {{cdh_all_app_path}}/mongodb/data
+pidfilepath = {{cdh_all_app_path}}/mongodb/mongodb.pid
+
+#where to log
+logpath = {{cdh_all_app_path}}/mongodb/mongodb.log
+logappend = true
+
+#enable journaling
+journal = true
+smallfiles = true
+
+#enables periodic logging of CPU utilization and I/O wait
+#cpu = true
+
+#turn on/off security.off is currently the default
+#noauth = true
+#auth = true
+
+#verbose logging output.
+#verbose = true
+
+#inspect all client data for validity on receipt (useful for developing drivers)
+#objcheck = true
+
+#enable db quota management
+#quota = true
+
+#set oplogging level where n is
+# 0=off(default)
+# 1=W
+# 2=R
+# 3=both
+# 7=W+some reads
+#oplog = 0
+
+#diagnostic/debugging option
+#nocursors = true
+
+#ignore query hints
+#nohints = true
+
+#turns off server-side scripting.this will result in greatly limited functionality
+#noscripting = true
+
+#turns off table scans.any query that would do a table scan fails.
+#notablescan = true
+
+#disable data file preallocation.
+#noprealloc = true
+
+#specify .ns file size for new databases.
+#nssize = <size>
+#account token for mongo monitoring server.
+#mms-token = <token>
+
+#server name for mongo monitoring server.
+#mms-name = <server-name>
+
+#ping interval for mongo monitoring server.
+#mms-interval = <seconds>
+

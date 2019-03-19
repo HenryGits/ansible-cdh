@@ -1,0 +1,45 @@
+---
+
+  - name: 解压presto
+    unarchive: src={{presto_package_name}} dest={{presto_directory}}/
+
+  - name: 更改presto文件名
+    shell: mv {{presto_directory}}/presto* {{presto_directory}}/presto
+
+  - name: 创建目录/etc
+    file: path={{presto_directory}}/presto/etc state=directory
+
+  - name: 创建目录 /opt/presto/etc/catalog
+    file: path={{presto_directory}}/presto/etc/catalog state=directory
+
+  - name: 配置/opt/presto/etc下的文件
+    template: src={{item}} dest={{presto_directory}}/presto/etc/{{item}} owner=root group=root mode=0644
+    with_items:
+      - node.properties
+      - jvm.config
+      - log.properties
+
+  - name: 配置/opt/presto/etc/catalog下的文件
+    template: src={{item.value.presto_plugin}} dest={{presto_directory}}/presto/etc/{{item.value.presto_plugin}} owner=root group=root mode=0644
+    with_dict:
+       "{{prestos}}"
+
+  - name: 拷贝扩展jar到/opt/presto/plugin下
+    copy: src={{item.value.presto_plugin_name}} dest={{presto_directory}}/presto/plugin/ owner=root group=root mode=0644
+    with_dict:
+       "{{prestos}}"
+
+  - name: 处理启动脚本launcher
+    template: src=launcher dest={{presto_directory}}/presto/bin/launcher owner=root group=root mode=0777
+
+  - name: 处理启动脚本presto.sh
+    template: src=presto.sh.j2 dest={{presto_directory}}/presto/bin/presto.sh owner=root group=root mode=0777
+
+
+
+################################################# 定时拉起 #######################################################################
+  - name: 处理定时任务模板文件presto_crontab.sh.j2
+    template: src=presto_crontab.sh.j2 dest={{tmp_dir}}/pst_crontab.sh owner=root group=root mode=0777
+
+  - name: 加入定时任务
+    cron: name="start presto" minute={{cron_time}} hour=* day=* month=* weekday=* job="sh {{tmp_dir}}/pst_crontab.sh" user=root state=present

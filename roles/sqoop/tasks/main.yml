@@ -1,0 +1,26 @@
+---
+
+  - name: 新建用户sqoop并获取root权限
+    user: name=sqoop shell=/bin/bash groups=hadoop home=/usr/sqoop createhome=yes system=yes
+    ignore_errors: True
+
+  - name: 创建cdh5文件夹
+    file: path={{cdh_all_app_path}} state=directory
+
+  - name: 解压sqoop安装包
+    unarchive: src={{sqoop_package_name}} dest={{cdh_all_app_path}}/
+
+  - name: 更改sqoop文件名称
+    shell: mv -f {{cdh_all_app_path}}/sqoop* {{cdh_all_app_path}}/sqoop
+
+  - name: 修改文件的所有组、人、权限
+    file: path={{cdh_all_app_path}}/sqoop  recurse=Yes owner=sqoop group=hadoop mode=0755
+
+  - name: 拷贝mysql-connector-java-5.1.44.jar到sqoop/lib下
+    copy: src={{mysql_jdbc_jar}} dest={{cdh_all_app_path}}/sqoop/lib/
+
+  - name: 设置configure-sqoop
+    template: src=configure-sqoop dest={{cdh_all_app_path}}/sqoop/bin/configure-sqoop owner=sqoop group=hadoop mode=0664
+
+  - name: 设置sqoop-env.sh
+    template: src=sqoop-env.sh dest={{cdh_all_app_path}}/sqoop/conf/sqoop-env.sh owner=sqoop group=hadoop mode=0664

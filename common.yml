@@ -1,0 +1,32 @@
+---
+  - name: 配置检查
+    hosts: common
+    remote_user: root
+    roles:
+       - { role: chkconfig, tags: "chkconfig" }
+
+
+  - name: master节点ssh相关设置
+    hosts: common[0]
+    remote_user: root
+    roles:
+    - { role: common, tags: "common_master", deploy: "master_node" }
+
+  - name: slave节点ssh相关设置
+    hosts: common:!common[0]
+    remote_user: root
+    roles:
+    - { role: common, tags: "common_slave", deploy: "slave_node" }
+
+  - name: 基础设置模块
+    hosts: all
+    remote_user: root
+    roles:
+        - { role: common, tags: "common_all", deploy: "all_node" }
+
+  #JDK模块
+  - name: 安装JDK模块
+    hosts: common
+    remote_user: root
+    roles:
+      - { role: jdk, tags: "jdk"}

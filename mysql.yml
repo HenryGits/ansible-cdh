@@ -1,0 +1,13 @@
+#安装MYSQL模块
+---
+  - name: 安装mysql server
+    hosts: mysql-master
+    remote_user: root
+    roles:
+       - { role: mysql, tags: "master_mysql", deploy: "master_mysql" }
+
+  - name: 安装mysql client
+    hosts: mysql-slave
+    remote_user: root
+    roles:
+       - { role: mysql, tags: "slave_mysql", deploy: "slave_mysql" }

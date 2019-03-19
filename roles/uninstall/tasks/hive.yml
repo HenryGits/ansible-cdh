@@ -1,0 +1,26 @@
+---
+
+  - name: 检查hive文件是否存在
+    shell: ls {{cdh_all_app_path}}/hive
+    ignore_errors: True
+    register: result
+
+  - name: 存在则删除hive文件
+    file: path={{cdh_all_app_path}}/hive state=absent
+    when: result|succeeded
+
+  - name: 移除用户hive
+    user: name=hive  state=absent
+    ignore_errors: True
+
+  - name: 存在则杀掉hive相关进程
+    shell: ps -ef | grep hive | grep -v "grep" | awk '{print $2}'| xargs kill -9
+    when: result|succeeded
+    ignore_errors: True
+
+  - name: chkconfig移除hive服务
+    shell: chkconfig --del hive
+    ignore_errors: True
+
+  - name: 移除定时任务
+    cron: name="start hive" minute={{cron_time}} hour=* day=* month=* weekday=* job="sh {{tmp_dir}}/hv_crontab.sh" user=root state=absent

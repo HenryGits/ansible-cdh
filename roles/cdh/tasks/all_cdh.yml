@@ -1,0 +1,29 @@
+---
+
+  #创建用户(所有节点)
+  - name: 所有节点增加用户cloudera-scm
+    shell: useradd --system --home={{cloudera_manager_directory}}/cm-5.13.0/run/cloudera-scm-server --no-create-home --shell=/bin/false --comment "Cloudera SCM User" cloudera-scm
+    ignore_errors: True
+
+  - name: 解压缩cm-5.13.0包
+    unarchive: src={{el6_cloudera_manager_package_name}} dest={{cloudera_manager_directory}}/
+    when: ansible_os_family == 'RedHat' and ansible_distribution_major_version == '6'
+
+  - name: 解压缩cm-5.13.0包
+    unarchive: src={{el7_cloudera_manager_package_name}} dest={{cloudera_manager_directory}}/
+    when: ansible_os_family == 'RedHat' and ansible_distribution_major_version == '7'
+
+  - name: 修改文件的所有组、人、权限
+    file: path={{cloudera_manager_directory}}/cm-5.13.0  recurse=Yes owner=root group=root mode=0777
+
+  - name: 设置cloudera-scm-agent
+    template: src=cloudera-scm-agent.j2 dest={{cloudera_manager_directory}}/cm-5.13.0/etc/init.d/cloudera-scm-agent owner=root group=root mode=0755
+
+  - name: 设置cloudera-scm-server
+    template: src=cloudera-scm-server.j2 dest={{cloudera_manager_directory}}/cm-5.13.0/etc/init.d/cloudera-scm-server owner=root group=root mode=0755
+
+  - name: 设置config.ini
+    template: src=config.ini.j2 dest={{cloudera_manager_directory}}/cm-5.13.0/etc/cloudera-scm-agent/config.ini owner=root group=root mode=0755
+
+  - name: 拷贝mysql-connector-java-5.1.44.jar到/opt/cm-5.13.0/share/cmf/lib下
+    copy: src={{mysql_jdbc_jar}} dest={{cloudera_manager_directory}}/cm-5.13.0/share/cmf/lib/ owner=root group=root mode=0755

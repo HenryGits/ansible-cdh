@@ -1,0 +1,25 @@
+---
+  - name: 检查oozie文件是否存在
+    shell: ls {{cdh_all_app_path}}/oozie
+    ignore_errors: True
+    register: result
+
+  - name: 停止oozie
+    shell: bin/oozied.sh stop run chdir={{cdh_all_app_path}}/oozie/
+    ignore_errors: True
+    when: result|succeeded
+
+  - name: 存在则删除oozie文件
+    file: path={{cdh_all_app_path}}/oozie state=absent
+    when: result|succeeded
+
+  - name: 移除用户
+    user: name=oozie state=absent
+    ignore_errors: True
+
+  - name: chkconfig移除oozie服务
+    shell: chkconfig --del oozie
+    ignore_errors: True
+
+  - name: 移除定时任务
+    cron: name="start oozie" minute={{cron_time}} hour=* day=* month=* weekday=* job="sh {{tmp_dir}}/ooz_crontab.sh" user=root state=absent

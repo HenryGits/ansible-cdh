@@ -1,0 +1,26 @@
+---
+
+  - name: 检查文件是否存在
+    shell: ls {{mysql_rpm_directory}}
+    ignore_errors: True
+    register: result
+
+  - name: 存在则删除mysql rpm文件
+    file: path={{mysql_rpm_directory}} state=absent
+    when: result|succeeded
+
+  - name: 卸载已有的server,client,common,libs服务
+    shell: yum -y remove mysql-community-*
+    when: result|succeeded
+    ignore_errors: True
+
+  - name: 删除mysql data文件
+    file: path=/var/lib/mysql state=absent
+    when: result|succeeded
+
+  - name: 删除mysql log文件
+    file: path=/var/log/mysqld.log state=absent
+    when: result|succeeded
+
+  - name: 移除定时任务
+    cron: name="start mysql" minute={{cron_time}} hour=* day=* month=* weekday=* job="sh {{tmp_dir}}/my_sql_crontab.sh" user=root state=absent

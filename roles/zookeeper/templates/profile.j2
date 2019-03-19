@@ -1,0 +1,13 @@
+
+#JDK
+export JAVA_HOME={{java_deposit_path}}/{{jdk_version}}
+export CLASSPATH=.:$JAVA_HOME/lib
+export PATH=$JAVA_HOME/bin:$PATH
+
+#Zookeeper
+export ZOOKEEPER_HOME={{cdh_all_app_path}}/zookeeper
+export CLASSPATH=.:$ZOOKEEPER_HOME/lib
+export PATH=$PATH:$ZOOKEEPER_HOME/bin
+
+
+

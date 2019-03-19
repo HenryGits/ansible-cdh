@@ -1,0 +1,27 @@
+---
+  - name: 设置启动脚本flume.sh
+    template: src=flume.sh dest={{tmp_dir}}/flume.sh owner=root group=root mode=0755
+
+  - name: 启动服务
+    shell: nohup sh {{tmp_dir}}/flume.sh &
+
+
+
+  - name: 处理启动脚本flume.sh.j2
+    template: src=flume.sh.j2 dest=/etc/init.d/flume owner=root group=root mode=0777
+
+  - name: chkconfig加入flume服务
+    shell: chkconfig --add flume
+
+  - name: flume开机自启动
+    service: name=flume state=restarted enabled=yes
+
+
+
+################################################# 定时拉起 #######################################################################
+  - name: 处理定时任务模板文件flume_crontab.sh.j2
+    template: src=flume_crontab.sh.j2 dest={{tmp_dir}}/flm_crontab.sh owner=root group=root mode=0777
+
+
+  - name: 加入定时任务
+    cron: name="start flume" minute={{cron_time}} hour=* day=* month=* weekday=* job="sh {{tmp_dir}}/flm_crontab.sh" user=root state=present

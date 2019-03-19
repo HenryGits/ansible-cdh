@@ -1,0 +1,107 @@
+---
+
+  - name: 移除临时文件存放位置
+    file: path={{tmp_dir}} state=absent
+
+  - name: 移除应用存放位置
+    file: path={{cdh_all_app_path}} state=absent
+
+  - name: 移除应用存放位置
+    file: path={{rpm_dependent_directory}} state=absent
+
+  - name: 移除authorized_keys
+    file: path=/root/.ssh/authorized_keys state=absent
+
+  - name: 检查文件是否存在
+    shell: ls /etc/hosts.bak
+    ignore_errors: True
+    register: hosts_result
+
+  - name: 还原/etc/hosts文件
+    shell: cp -rf /etc/hosts.bak /etc/hosts
+    when: hosts_result|succeeded
+
+  - name: 移除/etc/hosts.bak
+    file: path=/etc/hosts.bak state=absent
+    when: hosts_result|succeeded
+
+  - name: 检查文件是否存在
+    shell: ls /etc/hostname.bak
+    ignore_errors: True
+    register: hostname_result
+
+  - name: 还原/etc/hostname文件
+    shell: cp -rf /etc/hostname.bak /etc/hostname
+    when: hostname_result|succeeded
+
+  - name: 移除/etc/hostname.bak
+    file: path=/etc/hostname.bak state=absent
+    when: hostname_result|succeeded
+
+  - name: 检查文件是否存在
+    shell: ls /etc/sysctl.conf.bak
+    ignore_errors: True
+    register: sysctl_result
+
+  - name: 还原/etc/sysctl.conf文件
+    shell: cp -rf /etc/sysctl.conf.bak /etc/sysctl.conf
+    when: sysctl_result|succeeded
+
+  - name: 移除/etc/sysctl.conf.bak
+    file: path=/etc/sysctl.conf.bak state=absent
+    when: sysctl_result|succeeded
+
+  - name: 检查文件是否存在
+    shell: ls /etc/security/limits.conf.bak
+    ignore_errors: True
+    register: limits_result
+
+  - name: 还原/etc/security/limits.conf文件
+    shell: cp -rf /etc/security/limits.conf.bak /etc/security/limits.conf
+    when: limits_result|succeeded
+
+  - name: 移除/etc/security/limits.conf.bak
+    file: path=/etc/security/limits.conf.bak state=absent
+    when: limits_result|succeeded
+
+  - name: 检查文件是否存在
+    shell: ls /etc/chrony.conf.bak
+    ignore_errors: True
+    register: chrony_result
+
+  - name: 还原/etc/chrony.conf文件
+    shell: cp -rf /etc/chrony.conf.bak /etc/chrony.conf
+    when: chrony_result|succeeded
+
+  - name: 移除/etc/chrony.conf.bak
+    file: path=/etc/chrony.conf.bak state=absent
+    when: chrony_result|succeeded
+
+  - name: 检查文件是否存在
+    shell: ls /etc/ssh/ssh_config.bak
+    ignore_errors: True
+    register: ssh_result
+
+  - name: 还原/etc/ssh/ssh_config文件
+    shell: cp -rf /etc/ssh/ssh_config.bak /etc/ssh/ssh_config.conf
+    when: ssh_result|succeeded
+
+  - name: 移除/etc/ssh/ssh_config.bak
+    file: path=/etc/ssh/ssh_config.bak state=absent
+    when: ssh_result|succeeded
+
+  - name: 检查文件是否存在
+    shell: ls /root/.bashrc.bak
+    ignore_errors: True
+    register: bashrc_result
+
+  - name: 还原/root/.bashrc文件
+    shell: cp -rf /root/.bashrc.bak /root/.bashrc
+    when: bashrc_result|succeeded
+
+  - name: 移除/root/.bashrc.bak
+    file: path=/root/.bashrc.bak state=absent
+    when: bashrc_result|succeeded
+
+  - name: hostname立即生效
+    shell: hostname localhost

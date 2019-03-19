@@ -1,0 +1,79 @@
+---
+#安装dbudb模块
+
+  - name: 解压Tomcat安装包
+    unarchive: src={{tomcat_package_name}} dest={{dmudb_tomcat_directory}}/
+
+  - name: 修改目录名称
+    shell: "mv {{dmudb_tomcat_directory}}/*tomcat* {{dmudb_tomcat_directory}}/tomcat"
+
+  - name: 修改tomcat配置文件(更改端口为{{dmudb_port}})
+    template: src=server.xml dest={{dmudb_tomcat_directory}}/tomcat/conf/server.xml
+
+  - name: 拷贝dmudb.war到webapps下
+    copy: src={{dmudb_package_name}} dest={{dmudb_tomcat_directory}}/tomcat/webapps/ owner=root group=root mode=0644
+
+  - name: 将tomcat.sh脚本放到bin目录下
+    template: src=tomcat.sh.j2 dest={{dmudb_tomcat_directory}}/tomcat/bin/tomcat.sh owner=root group=root mode=0755
+
+  - name: 启动服务
+    shell: nohup {{dmudb_tomcat_directory}}/tomcat/bin/startup.sh &
+
+  - name: 等待启动
+    wait_for: path={{dmudb_tomcat_directory}}/tomcat/webapps/dmudb
+
+  - name: 修改配置文件cas-client.properties|dmdp-config.xml|jdbc.properties|flag.properties
+    template: src={{item}} dest={{dmudb_tomcat_directory}}/tomcat/webapps{{dmudb_conf_directory}}/{{item}}
+    with_items:
+      - cas-client.properties
+      - dmdp-config.xml
+      - jdbc.properties
+      - flag.properties
+
+  - name: 配置更改后重新启动
+    shell: sh tomcat.sh restart chdir={{dmudb_tomcat_directory}}/tomcat/bin/
+
+  - name: 30s后检查{{dmudb_port}}端口，直到端口启动后返回
+    wait_for: port={{dmudb_port}} delay=30
+
+  - name: 将curl_dmudb.sh脚本放到{{tmp_dir}}/目录下
+    template: src=curl_dmudb.sh dest={{tmp_dir}}/curl_dmudb.sh owner=root group=root mode=0755
+
+  - name: 初始化udm库
+    shell: sh {{tmp_dir}}/curl_dmudb.sh
+
+  - name: 等待1分钟
+    pause: minutes=1
+
+  - name: 将dmudb.sql脚本放到{{tmp_dir}}/目录下
+    template: src=dmudb.sql dest={{tmp_dir}}/dmudb.sql owner=root group=root mode=0755
+    delegate_to: "{{groups['dm-master'][0]}}"
+
+  - name: 执行初始化sql
+    shell: ./disql SYSDBA/{{dm_connection_password}}@{{groups['dm-master'][0]}}:{{dm7_listener_port}} '`{{tmp_dir}}/dmudb.sql' chdir={{dm7_dmdbms_path}}/bin/
+    delegate_to: "{{groups['dm-master'][0]}}"
+
+  - name: 等待1分钟
+    pause: minutes=1
+
+  - name: 初始化建库后重新启动
+    shell: nohup sh tomcat.sh restart & chdir={{dmudb_tomcat_directory}}/tomcat/bin/
+    notify: restart presto
+
+  - name: dmudb加入开机启动
+    file: src={{dmudb_tomcat_directory}}/tomcat/bin/tomcat.sh dest=/etc/init.d/tomcat owner=root group=root mode=0777 state=link force=yes
+
+  - name: chkconfig加入tomcat服务
+    shell: chkconfig --add tomcat
+
+  - name: dmudb开机自启动
+    service: name=tomcat state=restarted enabled=yes
+
+
+
+################################################# 定时拉起 #######################################################################
+  - name: 处理定时任务模板文件dmudb_crontab.sh.j2
+    template: src=dmudb_crontab.sh.j2 dest={{tmp_dir}}/dm_udb_crontab.sh owner=root group=root mode=0777
+
+  - name: 加入定时任务
+    cron: name="start dmudb" minute={{cron_time}} hour=* day=* month=* weekday=* job="sh {{tmp_dir}}/dm_udb_crontab.sh" user=root state=present

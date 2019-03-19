@@ -1,0 +1,6 @@
+---
+  - name: 部署dmudb
+    hosts: dmudb-master
+    remote_user: root
+    roles:
+       - { role: dmudb, tags: "dmudb"}

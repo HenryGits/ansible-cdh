@@ -1,0 +1,174 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+
+<configuration>
+    <property>
+        <name>dfs.replication</name>
+        <value>{% for host in groups['hadoop'] %}{% if loop.last %}{{ loop.length }}{% endif %}{% endfor %}</value>
+        <description>分片数量，伪分布式将其配置成1即可，分布式根据机器数量而定</description>
+    </property>
+
+    <property>
+        <name>dfs.permissions</name>
+        <value>true</value>
+        <description>hdfs文件权限,默认配置为false,真实环境可改为true</description>
+    </property>
+
+    <property>
+        <name>dfs.permissions.enabled</name>
+        <value>true</value>
+        <description>打开权限检查</description>
+    </property>
+
+    <property>
+        <name>dfs.permissions.superusergroup</name>
+        <value>hadoop</value>
+        <description>超级用户所在的组</description>
+    </property>
+
+    <property>
+        <name>dfs.upgrade.permission</name>
+        <value>0777</value>
+        <description>缺省权限为0777</description>
+    </property>
+
+
+    <!-- 如果NameNodes配置超过两个，则开启高可用 -->
+    {% for host in groups['NameNodes'] %}
+    {% if loop.last %}
+    {% if loop.length >1 %}
+    <property>
+        <name>dfs.nameservices</name>
+        <value>cluster</value>
+        <description>命名空间，它的值与fs.defaultFS的值要对应，namenode高可用之后有两个namenode，cluster是对外提供的统一入口</description>
+    </property>
+
+    <property>
+        <name>dfs.ha.namenodes.cluster</name>
+        <value>{% for host in groups['NameNodes'] %}{% if loop.last %}{{host}}{% else %}{{host}},{% endif %}{%
+            endfor%}
+        </value>
+        <description>指定 nameService 是 cluster 时的nameNode有哪些，这里的值也是逻辑名称，名字随便起，相互不重复即可</description>
+    </property>
+
+    <property>
+        <name>dfs.client.failover.proxy.provider.cluster</name>
+        <value>org.apache.hadoop.hdfs.server.namenode.ha.ConfiguredFailoverProxyProvider</value>
+        <description>指定 cluster 出故障时，哪个实现类负责执行故障切换</description>
+    </property>
+
+    <property>
+        <name>dfs.ha.fencing.methods</name>
+        <value>shell(/bin/true)</value>
+    </property>
+
+    <property>
+        <name>dfs.ha.fencing.ssh.connect-timeout</name>
+        <value>10000</value>
+    </property>
+
+    <property>
+        <name>dfs.namenode.shared.edits.dir</name>
+        <value>qjournal://{% for host in groups['DataNodes'] %}{% if loop.last %}{{host}}:8485/cluster{% else %}{{host}}:8485;{% endif %}{% endfor%}
+        </value>
+        <description>指定NameNode的元数据在JournalNode上的存放位置</description>
+    </property>
+
+    <property>
+        <name>dfs.journalnode.edits.dir</name>
+        <value>{{hadoop_journalnode_dir}}</value>
+        <description>指定JournalNode集群在对NameNode的目录进行共享时，自己存储数据的磁盘路径</description>
+    </property>
+
+    <property>
+        <name>dfs.ha.automatic-failover.enabled</name>
+        <value>true</value>
+        <description>启动故障自动恢复</description>
+    </property>
+
+    {% for host in groups['NameNodes'] %}
+    <property>
+        <name>dfs.namenode.rpc-address.cluster.{{host}}</name>
+        <value>{{host}}:8020</value>
+        <description>rpc地址</description>
+    </property>
+
+    <property>
+        <name>dfs.namenode.http-address.cluster.{{host}}</name>
+        <value>{{host}}:50070</value>
+        <description>http地址</description>
+    </property>
+    {% endfor %}
+    {% else %}
+    {% endif %}
+    {% else %}
+    {% endif %}
+    {% endfor %}
+
+    <property>
+        <name>dfs.namenode.name.dir</name>
+        <value>file:{{dfs_namenode_name_dir}}</value>
+        <description>NameNode在本地文件系统永久存储的路径</description>
+    </property>
+
+    <property>
+        <name>dfs.datanode.data.dir</name>
+        <value>file:{{dfs_datanode_data_dir}}</value>
+        <description>DataNode在本地文件系统中存放块的路径</description>
+    </property>
+
+    <property>
+        <name>dfs.namenode.hosts</name>
+        <value>{% for host in groups['DataNodes'] %}{% if loop.last %}{{host}}{% else %}{{host}},{% endif %}{%
+            endfor%}
+        </value>
+        <description>分别对应DataNode所在服务器主机名</description>
+    </property>
+
+    <property>
+        <name>dfs.blocksize</name>
+        <value>268435456</value>
+        <description>大文件系统HDFS块大小为256M，默认值为64M</description>
+    </property>
+
+    <property>
+        <name>dfs.namenode.handler.count</name>
+        <value>100</value>
+        <description>更多的NameNode服务器线程处理来自DataNodes的RPCS</description>
+    </property>
+
+    <property>
+        <name>dfs.webhdfs.enabled</name>
+        <value>true</value>
+        <description>enabled属性设置为true，否则就不能使用webhdfs的LISTSTATUS、LISTFILESTATUS等需要列出文件、文件夹状态</description>
+    </property>
+
+
+    <!-- 脑裂默认配置 -->
+    <property>
+        <name>dfs.namenode.handler.count</name>
+        <value>100</value>
+    </property>
+
+    <!-- HDFS下断点续传 -->
+    <property>
+        <name>dfs.support.append</name>
+        <value>true</value>
+    </property>
+</configuration>

@@ -1,0 +1,17 @@
+---
+
+  - name: 新建用户scala并获取root权限
+    user: name=scala shell=/bin/bash groups=hadoop home=/usr/scala createhome=yes system=yes
+    ignore_errors: True
+
+  - name: 创建cdh5文件夹
+    file: path={{cdh_all_app_path}} state=directory
+
+  - name: 解压scala安装包
+    unarchive: src={{scala_package_name}} dest={{cdh_all_app_path}}/
+
+  - name: 更改scala文件名称
+    shell: mv -f {{cdh_all_app_path}}/scala* {{cdh_all_app_path}}/scala
+
+  - name: 修改文件的所有组、人、权限
+    file: path={{cdh_all_app_path}}/scala  recurse=Yes owner=scala group=hadoop mode=0755

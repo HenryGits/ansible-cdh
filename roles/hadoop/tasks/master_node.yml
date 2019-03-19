@@ -1,0 +1,37 @@
+---
+
+  - name: 格式化高可用
+    shell: nohup bin/hdfs zkfc -formatZK & chdir={{cdh_all_app_path}}/hadoop/
+    ignore_errors: True
+
+  - name: 启动dfs
+    shell: sh start-dfs.sh chdir={{cdh_all_app_path}}/hadoop/sbin/
+
+  - name: 启动mr-jobhistory
+    shell: sh mr-jobhistory-daemon.sh start historyserver  chdir={{cdh_all_app_path}}/hadoop/sbin/
+
+  - name: 启动yarn集群
+    shell: sh start-yarn.sh chdir={{cdh_all_app_path}}/hadoop/sbin/
+    ignore_errors: True
+
+  - name: 等待2分钟
+    pause: minutes=2
+
+
+  - name: 处理启动脚本hadoop.sh
+    template: src=hadoop.sh.j2 dest=/etc/init.d/hadoop owner=root group=root mode=0777
+
+  - name: chkconfig加入hadoop服务
+    shell: chkconfig --add hadoop
+
+  - name: hadoop开机自启动
+    service: name=hadoop state=restarted enabled=yes
+
+
+
+################################################# 定时拉起 #######################################################################
+  - name: 处理定时任务模板文件hadoop_crontab.sh.j2
+    template: src=hadoop_crontab.sh.j2 dest={{tmp_dir}}/hadoop_crontab.sh owner=root group=root mode=0777
+
+  - name: 加入定时任务
+    cron: name="start hadoop" minute={{cron_time}} hour=* day=* month=* weekday=* job="sh {{tmp_dir}}/hadoop_crontab.sh" user=root state=present

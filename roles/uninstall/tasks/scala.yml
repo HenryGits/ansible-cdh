@@ -1,0 +1,14 @@
+---
+  - name: 检查scala文件是否存在
+    shell: ls {{cdh_all_app_path}}/scala
+    ignore_errors: True
+    register: result
+
+  - name: 存在则删除scala文件
+    file: path={{cdh_all_app_path}}/scala state=absent
+    when: result|succeeded
+
+  - name: 移除用户scala
+    user: name=scala state=absent
+    ignore_errors: True
+

@@ -1,0 +1,92 @@
+---
+
+  - name: 新建用户并获取root权限
+    user: name=oozie shell=/bin/bash groups=hadoop home=/usr/oozie createhome=yes system=yes
+    ignore_errors: True
+
+  - name: 创建cdh5文件夹
+    file: path={{cdh_all_app_path}} state=directory
+
+  - name: 解压oozie安装包
+    unarchive: src={{oozie_package_name}} dest={{cdh_all_app_path}}/
+
+  - name: 更改oozie文件名称
+    shell: mv -f {{cdh_all_app_path}}/oozie* {{cdh_all_app_path}}/oozie
+
+  - name: 修改文件的所有组、人、权限
+    file: path={{cdh_all_app_path}}/oozie  recurse=Yes owner=oozie group=hadoop mode=0755
+
+  - name: 设置oozie配置文件
+    template: src=oozie-site.xml dest={{cdh_all_app_path}}/oozie/conf/oozie-site.xml owner=oozie group=hadoop mode=0755
+
+  - name: 设置oozie启动脚本
+    template: src=oozie-env.sh dest={{cdh_all_app_path}}/oozie/bin/oozie-env.sh owner=oozie group=hadoop mode=0755
+
+  - name: 新建文件libext
+    file: path={{cdh_all_app_path}}/oozie/libext state=directory owner=oozie group=hadoop mode=0755
+
+  - name: 拷贝ext.zip到libext目录下
+    copy: src={{ext_package_name}} dest={{cdh_all_app_path}}/oozie/libext/
+
+  - name: 解压ext.zip
+    unarchive: src={{ext_package_name}} dest={{cdh_all_app_path}}/oozie/libext/
+
+  - name: 拷贝mysql-connector-java-5.1.44.jar到libext目录下
+    copy: src={{mysql_jdbc_jar}} dest={{cdh_all_app_path}}/oozie/libext/
+
+  - name: 拷贝hadoop lib到libext目录下
+    shell: find -name *.jar |xargs  -t -i cp {} {{cdh_all_app_path}}/oozie/libext/ chdir={{cdh_all_app_path}}/hadoop/
+
+  - name: 解压prepare-war
+    shell: bin/oozie-setup.sh prepare-war chdir={{cdh_all_app_path}}/oozie/
+
+  - name: 备份hsqldb-2.0.0.jar
+    shell: mv hsqldb-2.0.0.jar hsqldb-2.0.0.jar.bak chdir={{cdh_all_app_path}}/oozie/libext/
+
+  - name: 解压oozie-sharelib安装包
+    unarchive: src={{cdh_all_app_path}}/oozie/oozie-sharelib-4.1.0-cdh5.13.0-yarn.tar.gz dest={{cdh_all_app_path}}/oozie/ remote_src=yes
+
+  - name: 将share目录文件上传HDFS
+    shell: hdfs dfs -mkdir /user/oozie;hdfs dfs -put share /user/oozie chdir={{cdh_all_app_path}}/oozie
+    ignore_errors: True
+
+  - name: 处理模板文件oozie_mysql.sh
+    template: src=oozie_mysql.sh dest={{tmp_dir}}/oozie_mysql.sh owner=root group=root mode=0755
+
+  - name: 创建oozie相关用户、库
+    shell: sh {{tmp_dir}}/oozie_mysql.sh
+
+  - name: 建表
+    shell: source /root/.bashrc;bin/ooziedb.sh create -sqlfile oozie.sql -run chdir={{cdh_all_app_path}}/oozie/
+
+  - name: 作为后台进程启动
+    shell: nohup bin/oozied.sh start & chdir={{cdh_all_app_path}}/oozie/
+
+  - name: 等待程序启动
+    wait_for: path={{cdh_all_app_path}}/oozie/oozie-server/webapps/oozie/WEB-INF/lib
+
+  - name: 拷贝jar到oozie-server目录下
+    shell: cp libext/*.jar oozie-server/webapps/oozie/WEB-INF/lib/ chdir={{cdh_all_app_path}}/oozie/
+
+  - name: 拷贝ext到oozie-server目录下
+    shell: cp -r libext/ext-2.2 oozie-server/webapps/oozie/WEB-INF/lib/ chdir={{cdh_all_app_path}}/oozie/
+
+
+
+  - name: 设置oozie启动脚本文件
+    template: src=oozie.sh.j2 dest=/etc/init.d/oozie owner=root group=root mode=0777
+
+  - name: chkconfig加入oozie服务
+    shell: chkconfig --add oozie
+
+  - name: oozie开机自启动
+    service: name=oozie state=restarted enabled=yes
+
+
+
+################################################# 定时拉起 #######################################################################
+  - name: 处理定时任务模板文件oozie_crontab.sh.j2
+    template: src=oozie_crontab.sh.j2 dest={{tmp_dir}}/ooz_crontab.sh owner=root group=root mode=0777
+
+  - name: 加入定时任务
+    cron: name="start oozie" minute={{cron_time}} hour=* day=* month=* weekday=* job="sh {{tmp_dir}}/ooz_crontab.sh" user=root state=present

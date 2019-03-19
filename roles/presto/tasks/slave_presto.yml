@@ -1,0 +1,16 @@
+---
+  - name: 设置/opt/presto/etc/config.properties
+    template: src=worker/worker_config.j2 dest={{presto_directory}}/presto/etc/config.properties owner=root group=root mode=0644
+
+  - name: 启动服务
+    shell: "{{presto_directory}}/presto/bin/launcher.py restart"
+
+
+  - name: presto加入开机启动
+    file: src={{presto_directory}}/presto/bin/presto.sh dest=/etc/init.d/presto owner=root group=root mode=0777 state=link force=yes
+
+  - name: chkconfig加入presto服务
+    shell: chkconfig --add presto
+
+  - name: presto开机自启动
+    service: name=presto enabled=yes
